@@ -1,0 +1,135 @@
+{% extends 'base.html' %}
+
+{% block title %}Inicio - Proyecto Agro Inteligente{% endblock %}
+
+{% block content %}
+
+<section class="position-relative overflow-hidden w-100" style="background: linear-gradient(135deg, #203145 0%, #184525 100%); padding-top: 5rem; padding-bottom: 5rem;">
+    
+    <div class="position-absolute top-0 start-0 w-100 h-100 opacity-5" 
+         style="background-image: radial-gradient(rgba(255,255,255,0.3) 1px, transparent 1px); background-size: 20px 20px;"></div>
+    
+    <div class="container position-relative z-1">
+        <div class="row align-items-center gy-5">
+            
+            <div class="col-lg-6 text-white text-center text-lg-start">
+                
+                <div class="d-inline-block rounded-pill bg-warning bg-opacity-25 px-3 py-1 text-warning mb-3 fw-semibold small border border-warning border-opacity-25">
+                    <i class="bi bi-rocket-takeoff me-2"></i>Nueva Tecnología CMIP6
+                </div>
+
+                <h1 class="fw-bold mb-3 fs-2 fs-lg-1 lh-tight">
+                    El Futuro del Agro <br class="d-none d-lg-block"> Ecuatoriano
+                </h1>
+                
+                <p class="lead text-white-50 mb-4 fw-light" style="max-width: 500px;">
+                    Plataforma avanzada para el análisis de patrones climáticos históricos y proyecciones futuras en cuencas hidrográficas. Toma decisiones basadas en datos.
+                </p>
+                
+                <div class="d-flex gap-3 justify-content-center justify-content-lg-start">
+                    <a href="{{ url_for('pagina_app') }}" class="btn btn-light rounded-pill px-4 py-2 fw-semibold shadow-sm hover-lift d-flex align-items-center">
+                        <i class="bi bi-map-fill me-2 text-success"></i> Ir al Visor
+                    </a>
+                    <a href="#info-section" class="btn btn-outline-light rounded-pill px-4 py-2 fw-semibold hover-lift">
+                        Saber más
+                    </a>
+                </div>
+            </div>
+
+            <div class="col-lg-6 d-none d-lg-block">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400" class="w-100 h-auto opacity-75" style="max-height: 350px;">
+                    <defs>
+                        <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" style="stop-color:rgba(255,255,255,0.1);stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:rgba(39, 174, 96, 0.3);stop-opacity:1" />
+                        </linearGradient>
+                    </defs>
+                    <path fill="url(#grad1)" d="M50,300 C150,200 250,350 400,250 C550,150 550,300 550,300 L50,300 Z" />
+                    <path fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="2" d="M50,280 C150,180 250,330 400,230 C550,130 550,280 550,280" />
+                    <path fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="2" stroke-dasharray="5,5" d="M50,250 C150,150 250,300 400,200 C550,100 550,250 550,250" />
+                    <circle cx="400" cy="200" r="5" fill="#27ae60" />
+                    <circle cx="150" cy="180" r="5" fill="#ffffff" />
+                    <rect x="50" y="50" width="100" height="60" rx="10" fill="rgba(255,255,255,0.1)" />
+                    <rect x="60" y="65" width="60" height="8" rx="4" fill="rgba(255,255,255,0.3)" />
+                    <rect x="60" y="85" width="80" height="8" rx="4" fill="rgba(255,255,255,0.3)" />
+                </svg>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="info-section" class="py-5" style="background-color: #f8f9fa;">
+    <div class="container py-4">
+        <div class="text-center mb-5">
+            <h6 class="text-primary fw-bold text-uppercase ls-1">Características Principales</h6>
+            <h2 class="fw-bold mb-3">Tecnología al servicio del agro</h2>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm hover-scale transition-all p-4 text-center text-md-start">
+                    <div class="mb-4 d-inline-flex align-items-center justify-content-center bg-primary bg-opacity-10 text-primary rounded-4" style="width: 64px; height: 64px;">
+                        <i class="bi bi-globe-americas fs-2"></i>
+                    </div>
+                    <h3 class="h5 fw-bold">Modelos CMIP6</h3>
+                    <p class="text-muted small mb-0">
+                        Accede a la última generación de modelos climáticos globales. Simulaciones avanzadas para entender los escenarios futuros.
+                    </p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm hover-scale transition-all p-4 text-center text-md-start">
+                    <div class="mb-4 d-inline-flex align-items-center justify-content-center bg-success bg-opacity-10 text-success rounded-4" style="width: 64px; height: 64px;">
+                        <i class="bi bi-droplet-fill fs-2"></i>
+                    </div>
+                    <h3 class="h5 fw-bold">Cuencas Hidrográficas</h3>
+                    <p class="text-muted small mb-0">
+                        Gestión del recurso hídrico enfocada en unidades naturales. Analiza la precipitación exacta en zonas críticas.
+                    </p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm hover-scale transition-all p-4 text-center text-md-start">
+                    <div class="mb-4 d-inline-flex align-items-center justify-content-center bg-warning bg-opacity-10 text-warning rounded-4" style="width: 64px; height: 64px;">
+                        <i class="bi bi-graph-up-arrow fs-2"></i>
+                    </div>
+                    <h3 class="h5 fw-bold">Análisis de Tendencias</h3>
+                    <p class="text-muted small mb-0">
+                        Visualiza datos históricos desde 1980. Identifica patrones de sequía o lluvia intensa para una mejor planificación.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="py-5 text-center bg-white">
+    <div class="container py-3">
+        <div class="card border-0 rounded-4 overflow-hidden position-relative" style="background: var(--primary-color);">
+             <div class="position-absolute top-0 start-0 w-100 h-100 opacity-10" 
+                 style="background-image: url('https://cdn.jsdelivr.net/npm/bootstrap-icons/icons/grid-3x3-gap-fill.svg'); background-size: 50px;"></div>
+            <div class="card-body p-5 text-white position-relative z-1">
+                <h2 class="fw-bold mb-3">Comienza tu análisis ahora</h2>
+                <p class="mb-4 opacity-75 mx-auto" style="max-width: 600px;">Explora los datos climáticos de tus cuencas de interés sin necesidad de instalar software complejo.</p>
+                <a href="{{ url_for('pagina_app') }}" class="btn btn-success rounded-pill px-5 py-3 fw-bold hover-lift shadow">
+                    Acceder a la Aplicación <i class="bi bi-arrow-right ms-2"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+    .hover-lift { transition: transform 0.2s ease; }
+    .hover-lift:hover { transform: translateY(-3px); }
+    
+    .hover-scale { transition: transform 0.3s ease; }
+    .hover-scale:hover { transform: scale(1.02); }
+    
+    .transition-all { transition: all 0.3s ease-in-out; }
+    
+    .ls-1 { letter-spacing: 1px; }
+    .opacity-5 { opacity: 0.05; }
+    .opacity-10 { opacity: 0.1; }
+</style>
+
+{% endblock %}

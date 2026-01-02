@@ -1,0 +1,18 @@
+# --- Entornos Virtuales ---
+# Ignora la carpeta 'venv' que tienes actualmente
+venv/
+# Ignora 'env' por si acaso creas uno con ese nombre en el futuro
+env/
+
+# --- Python ---
+# Archivos de caché que se generan solos al ejecutar
+__pycache__/
+*.pyc
+
+# --- VS Code ---
+# Configuraciones locales de tu editor que no le sirven a otros
+.vscode/
+
+# --- Otros ---
+# Si todavía tienes la carpeta node_modules, es mejor ignorarla también
+node_modules/

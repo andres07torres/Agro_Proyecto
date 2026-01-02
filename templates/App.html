@@ -1,0 +1,429 @@
+{% extends 'base.html' %}
+
+{% block title %}Visor Agronómico Inteligente{% endblock %}
+
+{% block content %}
+<link
+    href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&family=Inter:wght@300;400;600&display=swap"
+    rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+
+<style>
+    :root {
+        --primary-color: #203145;
+        --accent-color: #27ae60;
+        --bg-color: #f4f6f9;
+        --card-radius: 16px;
+    }
+
+    body {
+        font-family: 'Inter', sans-serif;
+        background-color: var(--bg-color);
+    }
+
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+        font-family: 'Poppins', sans-serif;
+    }
+
+    /* Tarjetas Modernas */
+    .card-modern {
+        border: none;
+        border-radius: var(--card-radius);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        background: #fff;
+        overflow: hidden;
+    }
+
+    .card-header-modern {
+        background: var(--primary-color);
+        color: white;
+        padding: 1rem 1.2rem;
+        border-bottom: none;
+    }
+
+    /* Upload Box */
+    .upload-box {
+        border: 2px dashed #cbd5e0;
+        border-radius: 12px;
+        padding: 15px;
+        text-align: center;
+        background: #f8fafc;
+        cursor: pointer;
+        position: relative;
+        transition: all 0.3s;
+    }
+
+    .upload-box:hover {
+        border-color: var(--primary-color);
+        background: #edf2f7;
+    }
+
+    .upload-box input[type="file"] {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+        cursor: pointer;
+    }
+
+    /* Botones */
+    .btn-agro {
+        background-color: var(--accent-color);
+        color: white;
+        border: none;
+    }
+
+    .btn-agro:hover {
+        background-color: #219150;
+        color: white;
+    }
+
+    /* Loader */
+    .loader-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.9);
+        z-index: 2000;
+        display: none;
+        backdrop-filter: blur(2px);
+        border-radius: var(--card-radius);
+    }
+
+    /* Panel Flotante Mapa */
+    .info-lluvia {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 12px;
+        padding: 15px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+</style>
+
+<main class="container-fluid px-4 py-4">
+    <div class="row g-4">
+
+        <div class="col-lg-8">
+            <div class="card card-modern h-100 d-flex flex-column position-relative">
+                <div id="loader" class="loader-overlay">
+                    <div class="position-absolute top-50 start-50 translate-middle text-center">
+                        <div class="spinner-border text-primary mb-2" role="status"></div>
+                        <p class="fw-bold text-muted">Procesando...</p>
+                    </div>
+                </div>
+
+                <div class="card-header-modern d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 fw-bold"><i class="bi bi-map-fill me-2"></i>Visor Geográfico</h5>
+                    <button onclick="limpiarMapa()" class="btn btn-sm btn-outline-light rounded-pill">
+                        <i class="bi bi-arrow-counterclockwise"></i> Reiniciar
+                    </button>
+                </div>
+
+                <div class="card-body p-0 position-relative flex-grow-1" style="min-height: 600px;">
+                    <div id="map" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1;">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="d-flex flex-column gap-3 h-100">
+
+                <div class="card card-modern">
+                    <div class="card-header-modern py-2">
+                        <h6 class="mb-0"><i class="bi bi-sliders me-2"></i>Carga de Datos</h6>
+                    </div>
+                    <div class="card-body text-center">
+                        <div class="mb-3">
+                            <label class="small fw-bold text-muted mb-1 d-block text-start">MAPA (.zip)</label>
+                            <div class="upload-box py-2 mb-2" id="dropzoneShp">
+                                <input type="file" id="archivoShapefile" accept=".zip"
+                                    onchange="updateFileName(this, 'labelShp')">
+                                <span id="labelShp" class="small text-dark fw-bold"><i class="bi bi-file-zip me-1"></i>
+                                    Seleccionar ZIP</span>
+                            </div>
+
+                            <button class="btn btn-dark btn-sm px-4 rounded-pill shadow-sm" onclick="cargarShapefile()">
+                                Visualizar
+                            </button>
+                        </div>
+
+                        <div class="mb-0">
+                            <label class="small fw-bold text-muted mb-1 d-block text-start">DATOS (.nc)</label>
+                            <div class="upload-box py-2 mb-2" id="dropzoneNc">
+                                <input type="file" id="archivoNetCDF" accept=".nc"
+                                    onchange="updateFileName(this, 'labelNc')">
+                                <span id="labelNc" class="small text-dark fw-bold"><i
+                                        class="bi bi-cloud-upload me-1"></i> Seleccionar NC</span>
+                            </div>
+
+                            <button class="btn btn-agro btn-sm px-4 rounded-pill shadow-sm" onclick="subirNetCDF()">
+                                Analizar Datos
+                            </button>
+                        </div>
+
+                        <div id="errorNC" class="alert alert-danger mt-2 py-1 small" style="display:none;"></div>
+                    </div>
+                </div>
+
+                <div class="card card-modern flex-grow-1" id="resultadoNC" style="display: none;">
+                    <div class="card-header bg-white border-bottom pt-3 pb-2">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="fw-bold text-primary mb-0">Resultados</h6>
+                            <span class="badge bg-light text-dark border" id="tipoDatoBadge">Promedio</span>
+                        </div>
+
+                        <div class="input-group input-group-sm">
+                            <label class="input-group-text bg-light border-0" for="filtroAnio"><i
+                                    class="bi bi-calendar3"></i></label>
+                            <select class="form-select border-0 bg-light fw-bold text-primary" id="filtroAnio"
+                                onchange="aplicarFiltro()">
+                                <option value="todos">Cargando años...</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="card-body d-flex flex-column p-2">
+                        <div class="flex-grow-1 position-relative" style="min-height: 180px;">
+                            <canvas id="graficoPrecipitacion"></canvas>
+                        </div>
+
+                        <div class="table-responsive rounded border mt-2" style="height: 140px; background: #fff;">
+                            <table class="table table-sm table-striped mb-0 small text-center sticky-top">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Año</th>
+                                        <th>Fecha</th>
+                                        <th>mm</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tablaCuerpo"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card card-modern bg-white border-0 p-4 text-center" id="infoCapaPanel">
+                    <div class="text-muted opacity-25"><i class="bi bi-bar-chart-line fs-1"></i></div>
+                    <p class="small text-muted mt-2">Sube archivos para ver estadísticas.</p>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</main>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script src="https://unpkg.com/shpjs@latest/dist/shp.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    // --- UI HELPERS ---
+    function updateFileName(input, labelId) {
+        if (input.files.length > 0) {
+            document.getElementById(labelId).innerHTML = `<i class="bi bi-check-circle-fill text-success me-1"></i> ${input.files[0].name}`;
+        }
+    }
+
+    // --- MAPA ---
+    var map = L.map('map', { zoomControl: false }).setView([-1.8312, -78.1834], 7);
+    L.control.zoom({ position: 'topleft' }).addTo(map);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 }).addTo(map);
+
+    // Variables Globales
+    var capaActual = null;
+    var marcadorClick = null;
+    var chartInstancia = null;
+    var nombreArchivoNetCDF = null;
+    var datosGlobales = []; // Todos los datos
+    var variableActual = "";
+    var tipoDatoActual = "";
+
+    // Panel Info Mapa
+    var infoLluvia = L.control({ position: 'topright' });
+    infoLluvia.onAdd = function (map) { this._div = L.DomUtil.create('div', 'info-lluvia'); this.update(); return this._div; };
+    infoLluvia.update = function (props) {
+        this._div.innerHTML = props ?
+            `<div class="text-end">
+                <small class="text-uppercase text-muted fw-bold" style="font-size:0.7rem">${props.titulo}</small>
+                <h3 class="mb-0 fw-bold text-primary">${props.valor}<small class="fs-6">mm</small></h3>
+                <small class="text-danger fw-bold">${props.fecha}</small>
+             </div>` : '<small class="text-muted">Sin datos</small>';
+    };
+    infoLluvia.addTo(map);
+
+    // Click Mapa
+    map.on('click', function (e) {
+        if (!nombreArchivoNetCDF) return;
+        if (marcadorClick) map.removeLayer(marcadorClick);
+        marcadorClick = L.marker(e.latlng).addTo(map).bindPopup("Analizando...").openPopup();
+        consultarPunto(e.latlng.lat, e.latlng.lng);
+    });
+
+    // --- FUNCIONES LOGICAS ---
+    function cargarShapefile() {
+        var file = document.getElementById('archivoShapefile').files[0];
+        if (!file) return alert("Falta el archivo ZIP");
+        document.getElementById('loader').style.display = 'block';
+
+        var reader = new FileReader();
+        reader.onload = function (e) {
+            shp(e.target.result).then(function (geojson) {
+                if (capaActual) map.removeLayer(capaActual);
+                capaActual = L.geoJSON(geojson, { style: { color: '#27ae60', weight: 2, fillOpacity: 0.1 } }).addTo(map);
+                map.fitBounds(capaActual.getBounds());
+                document.getElementById('loader').style.display = 'none';
+            });
+        };
+        reader.readAsArrayBuffer(file);
+    }
+
+    async function subirNetCDF() {
+        var file = document.getElementById('archivoNetCDF').files[0];
+        if (!file) return alert("Falta el archivo NC");
+        var formData = new FormData();
+        formData.append('archivo_nc', file);
+        ejecutarConsulta('/procesar_netcdf', formData, true);
+    }
+
+    async function consultarPunto(lat, lon) {
+        var payload = { filename: nombreArchivoNetCDF, lat: lat, lon: lon };
+        ejecutarConsulta('/consultar_punto', JSON.stringify(payload), false);
+    }
+
+    async function ejecutarConsulta(url, bodyData, esUpload) {
+        document.getElementById('loader').style.display = 'block';
+        document.getElementById('errorNC').style.display = 'none';
+
+        try {
+            const options = { method: 'POST' };
+            if (esUpload) options.body = bodyData;
+            else { options.headers = { 'Content-Type': 'application/json' }; options.body = bodyData; }
+
+            const response = await fetch(url, options);
+            const data = await response.json();
+            if (!data.exito) throw new Error(data.error);
+
+            if (data.filename) nombreArchivoNetCDF = data.filename;
+            datosGlobales = data.datos;
+            variableActual = data.variable;
+            tipoDatoActual = data.tipo || (data.coords ? "Punto Específico" : "Promedio");
+
+            // UI
+            document.getElementById('tipoDatoBadge').innerText = tipoDatoActual;
+            document.getElementById('infoCapaPanel').style.display = 'none';
+            document.getElementById('resultadoNC').style.display = 'flex';
+            if (data.coords && marcadorClick) marcadorClick.setPopupContent(`<b>Datos:</b><br>${data.coords}`).openPopup();
+
+            llenarComboAnios(datosGlobales);
+            aplicarFiltro();
+
+        } catch (error) {
+            console.error(error);
+            document.getElementById('errorNC').innerText = error.message;
+            document.getElementById('errorNC').style.display = 'block';
+        } finally {
+            document.getElementById('loader').style.display = 'none';
+        }
+    }
+
+    // --- FILTRADO Y GRAFICOS ---
+    function llenarComboAnios(datos) {
+        const select = document.getElementById('filtroAnio');
+        const valorPrevio = select.value;
+        select.innerHTML = '<option value="todos">Historico Completo (Todos)</option>';
+
+        const anios = new Set();
+        datos.forEach(d => anios.add(d.fecha.substring(0, 4)));
+
+        Array.from(anios).sort().forEach(anio => {
+            if (!isNaN(anio)) {
+                const opt = document.createElement('option');
+                opt.value = anio; opt.innerText = "Año " + anio; select.appendChild(opt);
+            }
+        });
+
+        if (Array.from(anios).includes(valorPrevio)) select.value = valorPrevio;
+    }
+
+    function aplicarFiltro() {
+        const anio = document.getElementById('filtroAnio').value;
+        const datos = (anio === "todos") ? datosGlobales : datosGlobales.filter(d => d.fecha.startsWith(anio));
+        renderizar(datos, anio);
+    }
+
+    function renderizar(datos, anioLabel) {
+        // 1. Tabla
+        const tabla = document.getElementById('tablaCuerpo');
+        tabla.innerHTML = '';
+        let maxVal = -1; let maxFecha = "";
+        const labels = []; const values = [];
+
+        // Optimizacion: Si son muchos datos, mostrar solo los primeros 100 en tabla para no congelar
+        const limiteTabla = 1000;
+
+        datos.forEach((d, i) => {
+            labels.push(d.fecha);
+            values.push(d.valor);
+            if (d.valor > maxVal) { maxVal = d.valor; maxFecha = d.fecha; }
+
+            if (i < limiteTabla) {
+                tabla.innerHTML += `<tr><td>${d.fecha.substring(0, 4)}</td><td>${d.fecha}</td><td class="fw-bold">${d.valor}</td></tr>`;
+            }
+        });
+
+        // 2. Info Mapa
+        infoLluvia.update({ titulo: tipoDatoActual, fecha: maxFecha, valor: maxVal });
+
+        // 3. Grafico
+        const ctx = document.getElementById('graficoPrecipitacion').getContext('2d');
+        if (chartInstancia) chartInstancia.destroy();
+
+        let gradient = ctx.createLinearGradient(0, 0, 0, 300);
+        gradient.addColorStop(0, 'rgba(39, 174, 96, 0.4)');
+        gradient.addColorStop(1, 'rgba(39, 174, 96, 0.0)');
+
+        chartInstancia = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Lluvia (mm)',
+                    data: values,
+                    borderColor: '#27ae60',
+                    backgroundColor: gradient,
+                    borderWidth: 2,
+                    pointRadius: anioLabel === 'todos' ? 0 : 3,
+                    fill: true,
+                    tension: 0.3
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { display: false }, tooltip: { mode: 'index', intersect: false } },
+                scales: { x: { display: false }, y: { beginAtZero: true } }
+            }
+        });
+    }
+
+    function limpiarMapa() {
+        if (capaActual) map.removeLayer(capaActual);
+        if (marcadorClick) map.removeLayer(marcadorClick);
+        capaActual = null; marcadorClick = null;
+        document.getElementById('resultadoNC').style.display = 'none';
+        document.getElementById('infoCapaPanel').style.display = 'block';
+        infoLluvia.update();
+    }
+</script>
+{% endblock %}
