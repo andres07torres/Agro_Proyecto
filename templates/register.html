@@ -1,0 +1,119 @@
+{% set hide_footer = True %}
+{% extends 'base.html' %}
+
+{% block title %}Crear Cuenta{% endblock %}
+
+{% block content %}
+<div class="min-h-[calc(100vh-64px)] flex items-center justify-center bg-background dark:bg-[#0b0d0e] px-6 py-16 lg:py-0 transition-colors duration-500">
+    <div class="max-w-md w-full mt-10 lg:mt-0">
+        <!-- Card -->
+        <div class="bg-white dark:bg-[#191c1d] rounded-[2rem] shadow-xl shadow-primary/5 border border-outline-variant/10 dark:border-white/5 p-10 relative overflow-hidden transition-all duration-500">
+            <!-- Decorative circle -->
+            <div class="absolute -top-12 -right-12 w-32 h-32 bg-primary/20 rounded-full blur-3xl opacity-30"></div>
+            
+            <div class="relative z-10">
+                <!-- Header -->
+                <div class="text-center mb-10">
+                    <div class="w-16 h-16 bg-primary dark:bg-primary-fixed rounded-2xl flex items-center justify-center text-white dark:text-on-primary-fixed mx-auto mb-6 shadow-lg -rotate-3 transition-transform hover:rotate-0 duration-300">
+                        <span class="material-symbols-outlined text-3xl" style="font-variation-settings: 'FILL' 1;">person_add</span>
+                    </div>
+                    <h1 class="font-headline font-black text-3xl text-primary dark:text-primary-fixed tracking-tight" data-i18n="reg_title">Únete al Visor</h1>
+                    <p class="text-secondary dark:text-secondary/70 text-sm mt-2 font-medium italic" data-i18n="feat_subtitle">Accede a inteligencia agrícola avanzada</p>
+                </div>
+
+                <!-- Flash Messages -->
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                  {% if messages %}
+                    {% for category, message in messages %}
+                      <div class="mb-6 p-4 rounded-xl text-sm font-medium border
+                        {% if category == 'danger' %} bg-error-container text-on-error-container border-error/10 {% else %} bg-primary/10 text-primary border-primary/10 {% endif %}">
+                        {{ message }}
+                      </div>
+                    {% endfor %}
+                  {% endif %}
+                {% endwith %}
+
+                <form method="POST" action="{{ url_for('register') }}" class="space-y-6">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div>
+                        <label for="nombre" class="block text-xs font-black text-secondary dark:text-secondary/70 uppercase tracking-widest mb-2 pl-1" data-i18n="prof_name">Nombre Completo</label>
+                        <div class="relative group">
+                            <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline dark:text-outline-variant text-xl group-focus-within:text-primary dark:group-focus-within:text-primary-fixed transition-colors">badge</span>
+                            <input type="text" id="nombre" name="nombre" required 
+                                class="w-full bg-surface-container-low dark:bg-white/5 border-none dark:text-white rounded-2xl py-4 pl-12 pr-4 text-sm focus:ring-2 focus:ring-primary/20 transition-all placeholder-outline/50"
+                                placeholder="Ej: Dr. Manuel Torres">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="email" class="block text-xs font-black text-secondary dark:text-secondary/70 uppercase tracking-widest mb-2 pl-1" data-i18n="email_label">Correo Electrónico</label>
+                        <div class="relative group">
+                            <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline dark:text-outline-variant text-xl group-focus-within:text-primary dark:group-focus-within:text-primary-fixed transition-colors">mail</span>
+                            <input type="email" id="email" name="email" required 
+                                class="w-full bg-surface-container-low dark:bg-white/5 border-none dark:text-white rounded-2xl py-4 pl-12 pr-4 text-sm focus:ring-2 focus:ring-primary/20 transition-all placeholder-outline/50"
+                                placeholder="tu@correo.com">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="password" class="block text-xs font-black text-secondary dark:text-secondary/70 uppercase tracking-widest mb-2 pl-1" data-i18n="pass_label">Contraseña</label>
+                        <div class="relative group">
+                            <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline dark:text-outline-variant text-xl group-focus-within:text-primary dark:group-focus-within:text-primary-fixed transition-colors">lock</span>
+                            <input type="password" id="password" name="password" required 
+                                class="w-full bg-surface-container-low dark:bg-white/5 border-none dark:text-white rounded-2xl py-4 pl-12 pr-4 text-sm focus:ring-2 focus:ring-primary/20 transition-all placeholder-outline/50"
+                                placeholder="Crea una clave segura">
+                        </div>
+                        <!-- Strength bar -->
+                        <div class="mt-2 h-1 w-full bg-outline-variant/10 rounded-full overflow-hidden">
+                            <div id="strengthBar" class="h-full w-0 transition-all duration-300 bg-error"></div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="confirm_password" class="block text-xs font-black text-secondary dark:text-secondary/70 uppercase tracking-widest mb-2 pl-1">Confirmar Contraseña</label>
+                        <div class="relative group">
+                            <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline dark:text-outline-variant text-xl group-focus-within:text-primary dark:group-focus-within:text-primary-fixed transition-colors">lock_reset</span>
+                            <input type="password" id="confirm_password" name="confirm_password" required 
+                                class="w-full bg-surface-container-low dark:bg-white/5 border-none dark:text-white rounded-2xl py-4 pl-12 pr-4 text-sm focus:ring-2 focus:ring-primary/20 transition-all placeholder-outline/50"
+                                placeholder="Repite tu contraseña">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="px-10 bg-primary dark:bg-primary-fixed text-white dark:text-on-primary-fixed py-3 rounded-full font-black uppercase tracking-widest text-[10px] shadow-lg shadow-primary/20 hover:brightness-110 active:scale-[0.98] transition-all flex items-center justify-center gap-2 mx-auto">
+                        <span data-i18n="btn_register">Crear Mi Cuenta</span>
+                        <span class="material-symbols-outlined text-xl">rocket_launch</span>
+                    </button>
+                </form>
+
+                <div class="mt-10 text-center border-t border-outline-variant/10 dark:border-white/5 pt-8">
+                    <p class="text-xs text-secondary dark:text-secondary/70 font-medium">
+                        <span data-i18n="already_member">¿Ya eres miembro?</span>
+                        <a href="{{ url_for('login') }}" class="text-primary dark:text-primary-fixed font-black hover:underline underline-offset-4 ml-1" data-i18n="btn_login">Inicia Sesión</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% block scripts %}
+<script>
+    const passInput = document.getElementById('password');
+    const strengthBar = document.getElementById('strengthBar');
+
+    passInput.addEventListener('input', () => {
+        const val = passInput.value;
+        let strength = 0;
+        if (val.length >= 8) strength += 40;
+        if (/[A-Z]/.test(val)) strength += 20;
+        if (/[0-9]/.test(val)) strength += 20;
+        if (/[^A-Za-z0-9]/.test(val)) strength += 20;
+
+        strengthBar.style.width = strength + '%';
+        
+        if (strength < 40) strengthBar.className = 'h-full transition-all duration-300 bg-error';
+        else if (strength < 80) strengthBar.className = 'h-full transition-all duration-300 bg-amber-500';
+        else strengthBar.className = 'h-full transition-all duration-300 bg-primary';
+    });
+</script>
+{% endblock %}
+{% endblock %}

@@ -21,3 +21,10 @@ tzdata==2025.3
 Werkzeug==3.1.4
 xarray==2025.12.0
 gunicorn
+flask-sqlalchemy==3.1.1
+psycopg2-binary==2.9.9
+flask-login==0.6.3
+python-dotenv==1.0.1
+flask-wtf==1.2.1
+flask-limiter==3.7.0
+whitenoise==6.7.0

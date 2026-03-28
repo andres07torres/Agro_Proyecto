@@ -1,0 +1,312 @@
+{% set hide_nav = True %}
+{% extends 'base.html' %}
+
+{% block title %}Configuración{% endblock %}
+
+{% block content %}
+<div class="flex h-[calc(100vh-64px)] overflow-hidden bg-background dark:bg-[#0b0d0e] font-body relative">
+    <!-- Mobile Sidebar Backdrop -->
+    <div id="sidebarBackdrop" class="fixed inset-0 bg-black/80 z-[100] lg:hidden hidden" onclick="toggleSidebar()"></div>
+
+    <!-- SideNavBar -->
+    <aside id="mainSidebar" class="fixed lg:static inset-y-0 left-0 w-64 bg-[#f8f9fa] dark:bg-[#191c1d] border-r border-[#edeeef]/15 dark:border-white/5 flex flex-col font-headline font-semibold text-sm transform -translate-x-full lg:translate-x-0 transition-transform duration-300 z-[110] shrink-0">
+        <div class="p-8">
+            <div class="flex items-center justify-between mb-10">
+                <div class="flex items-center space-x-3 text-center">
+                    <div class="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-white shadow-lg">
+                        <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">eco</span>
+                    </div>
+                    <div>
+                        <h1 class="text-on-surface dark:text-white font-headline font-black uppercase tracking-tighter text-lg">Agro Visor</h1>
+                    </div>
+                </div>
+                <button onclick="toggleSidebar()" class="lg:hidden p-2 rounded-full hover:bg-surface-container dark:hover:bg-white/10 text-on-surface dark:text-white">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <nav class="space-y-1">
+                <a class="group flex items-center space-x-3 py-4 px-6 text-secondary dark:text-secondary/70 opacity-80 hover:bg-[#edeeef] dark:hover:bg-white/5 hover:opacity-100 transition-all cursor-pointer active:scale-95 duration-150" href="{{ url_for('dashboard') }}">
+                    <span class="material-symbols-outlined">map</span>
+                    <span data-i18n="sidebar_explorer">Explorador</span>
+                </a>
+                <a class="group flex items-center space-x-3 py-4 px-6 text-secondary dark:text-secondary/70 opacity-80 hover:bg-[#edeeef] dark:hover:bg-white/5 hover:opacity-100 transition-all cursor-pointer active:scale-95 duration-150" href="{{ url_for('tendencias') }}">
+                    <span class="material-symbols-outlined">trending_up</span>
+                    <span data-i18n="sidebar_trends">Tendencias</span>
+                </a>
+                <a class="group flex items-center space-x-3 py-4 px-6 text-secondary dark:text-secondary/70 opacity-80 hover:bg-[#edeeef] dark:hover:bg-white/5 hover:opacity-100 transition-all cursor-pointer active:scale-95 duration-150" href="{{ url_for('carga_datos') }}">
+                    <span class="material-symbols-outlined">cloud_upload</span>
+                    <span data-i18n="sidebar_upload">Carga de Datos</span>
+                </a>
+                <a class="group flex items-center space-x-3 py-4 px-6 text-primary dark:text-primary-fixed border-r-4 border-primary dark:border-primary-fixed bg-[#edeeef] dark:bg-white/5 transition-all cursor-pointer active:scale-95 duration-150" href="{{ url_for('configuracion') }}">
+                    <span class="material-symbols-outlined">settings</span>
+                    <span data-i18n="sidebar_config">Configuración</span>
+                </a>
+            </nav>
+        </div>
+        <div class="mt-auto p-8 border-t border-[#edeeef]/15 dark:border-white/5">
+            <a class="group flex items-center space-x-3 py-4 px-6 text-error opacity-80 hover:bg-error/10 hover:opacity-100 transition-all cursor-pointer active:scale-95 duration-150" href="{{ url_for('logout') }}">
+                <span class="material-symbols-outlined">logout</span>
+                <span data-i18n="nav_logout">Cerrar Sesión</span>
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col h-full overflow-hidden">
+        <!-- Header -->
+        <header class="flex justify-between items-center px-4 lg:px-8 h-16 w-full z-40 bg-white dark:bg-[#191c1d] shadow-sm shrink-0 border-b dark:border-white/5">
+            <div class="flex items-center space-x-4 lg:space-x-6">
+                <button onclick="toggleSidebar()" class="lg:hidden p-2 rounded-lg hover:bg-surface-container dark:hover:bg-white/10 text-secondary dark:text-primary-fixed">
+                    <span class="material-symbols-outlined">menu_open</span>
+                </button>
+                <h2 class="font-headline tracking-tight font-bold text-base lg:text-xl text-primary dark:text-primary-fixed truncate max-w-[140px] lg:max-w-none" data-i18n="sidebar_config">Configuración</h2>
+            </div>
+            <div class="flex items-center space-x-3 lg:space-x-4">
+                <button onclick="showNotifications()" class="relative hidden lg:flex p-2 rounded-full hover:bg-surface-container dark:hover:bg-white/10 transition-all cursor-pointer active:scale-95">
+                    <span class="material-symbols-outlined text-secondary dark:text-secondary/70">notifications</span>
+                    <span class="notification-badge hidden absolute top-[2px] right-[2px] w-2.5 h-2.5 bg-error rounded-full animate-pulse border-2 border-white dark:border-[#191c1d]"></span>
+                </button>
+                <div class="hidden lg:block w-[1px] h-6 bg-outline-variant/30 mx-2"></div>
+                
+                <!-- Profile Section (Matches Screenshot) -->
+                <div class="flex items-center space-x-3">
+                    <div class="hidden sm:block text-right">
+                        <p class="text-xs font-black font-headline text-on-surface dark:text-white line-clamp-1">{{ current_user.nombre }}</p>
+                        <p class="text-[10px] text-secondary/60 dark:text-secondary/40 uppercase tracking-widest font-bold">{{ current_user.rol }}</p>
+                    </div>
+                    <div class="w-10 h-10 rounded-xl bg-[#b4f4c7] text-[#00210e] flex items-center justify-center font-bold text-sm shadow-sm shrink-0">
+                        {{ current_user.nombre[:2] | upper }}
+                    </div>
+                </div>
+
+                <div class="lg:block w-[1px] h-6 bg-outline-variant/30 mx-2"></div>
+
+                <!-- Mini Theme/Lang for Dash -->
+                <div class="flex items-center gap-1.5">
+                    <button onclick="toggleTheme()" class="p-2 rounded-full hover:bg-surface-container dark:hover:bg-white/10 text-secondary dark:text-primary-fixed transition-colors">
+                        <span class="material-symbols-outlined dark:hidden">dark_mode</span>
+                        <span class="material-symbols-outlined hidden dark:block">light_mode</span>
+                    </button>
+                    <button onclick="updateLanguage(document.documentElement.lang === 'es' ? 'en' : 'es')" class="w-8 h-8 rounded-full hover:bg-surface-container dark:hover:bg-white/10 flex items-center justify-center text-[10px] font-black uppercase text-secondary dark:text-secondary/70 transition-colors">
+                        <span data-lang-toggle>EN</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Content Area -->
+        <div class="flex-1 p-4 lg:p-8 overflow-y-auto custom-scrollbar flex flex-col items-center">
+            <div class="w-full max-w-4xl space-y-12">
+                <!-- User Profile Section -->
+                <section class="space-y-6">
+                    <h3 class="font-headline font-extrabold text-xl lg:text-2xl text-primary dark:text-primary-fixed flex items-center space-x-2">
+                        <span class="material-symbols-outlined">person</span>
+                        <span data-i18n="prof_title">Perfil de Usuario</span>
+                    </h3>
+                    <div class="bg-white dark:bg-[#191c1d] p-8 rounded-3xl shadow-sm border border-outline-variant/10 dark:border-white/5 grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div class="space-y-2">
+                            <label class="text-[10px] font-black text-secondary dark:text-secondary/70 uppercase tracking-widest block ml-2" data-i18n="prof_name">Nombre Completo</label>
+                            <input type="text" id="inNombre" value="{{ current_user.nombre }}" class="w-full bg-surface-container-low dark:bg-white/5 border-none dark:text-white rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20">
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-[10px] font-black text-secondary dark:text-secondary/70 uppercase tracking-widest block ml-2" data-i18n="email_label">Correo Electrónico</label>
+                            <input type="email" id="inEmail" value="{{ current_user.email }}" class="w-full bg-surface-container-low dark:bg-white/5 border-none dark:text-white rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20">
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-[10px] font-black text-secondary dark:text-secondary/70 uppercase tracking-widest block ml-2" data-i18n="prof_role">Rol del Sistema</label>
+                            <input type="text" value="{{ current_user.rol }}" disabled class="w-full bg-surface-container dark:bg-white/10 border-none dark:text-white/60 rounded-xl px-4 py-3 text-xs opacity-60">
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-center mt-6">
+                        <button id="btnSaveProfile" onclick="guardarPerfil()" class="bg-primary dark:bg-primary-fixed text-white dark:text-on-primary-fixed font-black uppercase tracking-widest text-[10px] px-12 py-4 rounded-full shadow-md hover:shadow-lg active:scale-95 transition-all flex justify-center items-center">
+                            <span data-i18n="btn_save">Guardar Cambios</span>
+                        </button>
+                    </div>
+                </section>
+
+                <!-- Security Section -->
+                <section class="space-y-6">
+                    <h3 class="font-headline font-extrabold text-xl lg:text-2xl text-primary dark:text-primary-fixed flex items-center space-x-2">
+                        <span class="material-symbols-outlined">security</span>
+                        <span data-i18n="sec_title">Seguridad</span>
+                    </h3>
+                    <div class="bg-white dark:bg-[#191c1d] p-8 rounded-3xl shadow-sm border border-outline-variant/10 dark:border-white/5 space-y-8">
+                        <div class="flex flex-col space-y-4">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm font-bold text-on-surface dark:text-white" data-i18n="pass_change">Cambiar Contraseña</p>
+                                    <p class="text-xs text-secondary dark:text-secondary/70 mt-1" data-i18n="pass_desc">Se recomienda usar contraseñas de al menos 12 caracteres.</p>
+                                </div>
+                                <button onclick="document.getElementById('passForm').classList.toggle('hidden')" class="bg-surface-container dark:bg-white/5 text-primary dark:text-primary-fixed font-black uppercase tracking-widest text-[10px] px-8 py-3 rounded-full hover:bg-surface-container-highest transition-all" data-i18n="btn_update">Actualizar</button>
+                            </div>
+                            <div id="passForm" class="hidden mt-6 flex flex-col border-t border-outline-variant/10 dark:border-white/5 pt-6">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                    <div class="space-y-2">
+                                        <label class="text-[10px] font-black text-secondary dark:text-secondary/70 uppercase tracking-widest block ml-2">Contraseña Actual</label>
+                                        <input type="password" id="currentPass" class="w-full bg-surface-container-low dark:bg-white/5 border-none dark:text-white rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20">
+                                    </div>
+                                    <div class="space-y-2">
+                                        <label class="text-[10px] font-black text-secondary dark:text-secondary/70 uppercase tracking-widest block ml-2">Nueva Contraseña</label>
+                                        <input type="password" id="newPass" class="w-full bg-surface-container-low dark:bg-white/5 border-none dark:text-white rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20">
+                                    </div>
+                                </div>
+                                <div class="flex justify-end mt-6">
+                                    <button onclick="guardarPassword()" id="btnSavePass" class="bg-primary dark:bg-primary-fixed text-white dark:text-on-primary-fixed font-black uppercase tracking-widest text-[10px] px-12 py-4 rounded-full shadow-md hover:shadow-lg active:scale-95 transition-all">Guardar</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="w-full h-[1px] bg-outline-variant/10 dark:bg-white/5"></div>
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-bold text-on-surface dark:text-white" data-i18n="sec_2fa">Autenticación de Dos Pasos</p>
+                                <p class="text-xs text-secondary dark:text-secondary/70 mt-1" data-i18n="sec_2fa_desc">Añade una capa extra de seguridad a tu cuenta.</p>
+                            </div>
+                            <button onclick="toggle2FA()" id="btn2FA" class="active:scale-95 transition-all cursor-pointer">
+                                {% if current_user.two_factor_enabled %}
+                                <span class="bg-[#b4f4c7]/30 text-[#00210e] dark:bg-primary-fixed/20 dark:text-primary-fixed text-[10px] font-black px-4 py-1.5 rounded-full uppercase tracking-widest">Activado</span>
+                                {% else %}
+                                <span class="bg-surface-container-high dark:bg-white/10 text-secondary dark:text-secondary/70 text-[10px] font-black px-4 py-1.5 rounded-full uppercase tracking-widest" data-i18n="sec_disabled">Desactivado</span>
+                                {% endif %}
+                            </button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Danger Zone -->
+                <section class="space-y-4 pt-10">
+                    <div class="bg-error/5 dark:bg-error/10 p-8 rounded-3xl border border-error/10 flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-bold text-error" data-i18n="danger_title">Zona de Peligro</p>
+                            <p class="text-xs text-error/70 mt-1" data-i18n="danger_desc">Estas acciones son irreversibles y afectarán tu acceso al sistema.</p>
+                        </div>
+                        <button onclick="eliminarCuenta()" class="text-error font-black uppercase tracking-widest text-[10px] hover:underline underline-offset-4 active:opacity-50 transition-opacity" data-i18n="btn_delete">Eliminar Cuenta</button>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    function toggleSidebar() {
+        const sidebar = document.getElementById('mainSidebar');
+        const backdrop = document.getElementById('sidebarBackdrop');
+        sidebar.classList.toggle('-translate-x-full');
+        backdrop.classList.toggle('hidden');
+    }
+
+    async function guardarPerfil() {
+        const btn = document.getElementById('btnSaveProfile');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<span class="material-symbols-outlined animate-spin text-sm mr-2">progress_activity</span> Guardando...';
+        btn.disabled = true;
+
+        try {
+            const res = await fetch('/api/profile/update', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: JSON.stringify({
+                    nombre: document.getElementById('inNombre').value,
+                    email: document.getElementById('inEmail').value
+                })
+            });
+            const data = await res.json();
+            if(!data.exito) throw new Error(data.error);
+            Swal.fire("Éxito", "Perfil actualizado correctamente.", "success");
+        } catch (e) {
+            Swal.fire("Error", "Fallo al actualizar el perfil: " + (e.message || "Error desconocido"), "error");
+        } finally {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        }
+    }
+
+    async function guardarPassword() {
+        const currentPass = document.getElementById('currentPass').value;
+        const newPass = document.getElementById('newPass').value;
+        if (!currentPass || !newPass) return Swal.fire("Aviso", "Por favor complete ambos campos.", "warning");
+        if (newPass.length < 8) return Swal.fire("Seguridad", "La contraseña debe tener al menos 8 caracteres.", "info");
+        
+        const btn = document.getElementById('btnSavePass');
+        btn.innerText = "Verificando...";
+        btn.disabled = true;
+
+        try {
+            const res = await fetch('/api/profile/password', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: JSON.stringify({ current_password: currentPass, new_password: newPass })
+            });
+            const data = await res.json();
+            if(!data.exito) throw new Error(data.error);
+            Swal.fire("¡Actualizada!", "Su sesión ahora está más segura.", "success");
+            if(window.addNotification) window.addNotification("Has cambiado tu contraseña.");
+            document.getElementById('currentPass').value = '';
+            document.getElementById('newPass').value = '';
+            document.getElementById('passForm').classList.add('hidden');
+        } catch (e) {
+            Swal.fire("Operación denegada", (e.message || "Contraseña actual incorrecta"), "error");
+        } finally {
+            btn.innerText = "Guardar";
+            btn.disabled = false;
+        }
+    }
+
+    async function toggle2FA() {
+        const btn = document.getElementById('btn2FA');
+        btn.classList.add('opacity-50', 'pointer-events-none');
+        try {
+            const res = await fetch('/api/profile/2fa', { 
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content
+                }
+            });
+            const data = await res.json();
+            if(!data.exito) throw new Error("API call failed");
+            window.location.reload(); 
+        } catch(e) {
+            Swal.fire("Error", "Fallo al alterar Autenticación de Dos Pasos.", "error");
+            btn.classList.remove('opacity-50', 'pointer-events-none');
+        }
+    }
+
+    async function eliminarCuenta() {
+        const confirmacion = await Swal.fire({
+            title: '¿Estás completamente seguro?',
+            text: "Se perderá todo el historial de datos cargados y no podrás iniciar sesión con este correo nuevamente.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Sí, eliminar cuenta',
+            cancelButtonText: 'Cancelar'
+        });
+
+        if (!confirmacion.isConfirmed) return;
+        
+        try {
+            const res = await fetch('/api/profile/delete', { 
+                method: 'DELETE',
+                headers: {
+                    'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content
+                }
+            });
+            const data = await res.json();
+            if(data.exito) {
+                window.location.href = "/inicio";
+            }
+        } catch(e) {
+            Swal.fire("Error Crítico", "Ha ocurrido un error intentando remover los datos persistentes del usuario.", "error");
+        }
+    }
+</script>
+{% endblock %}

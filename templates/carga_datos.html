@@ -1,0 +1,149 @@
+{% set hide_nav = True %}
+{% extends 'base.html' %}
+
+{% block title %}Carga de Datos{% endblock %}
+
+{% block content %}
+<div class="flex h-[calc(100vh-64px)] overflow-hidden bg-background dark:bg-[#0b0d0e] relative">
+    <!-- Mobile Sidebar Backdrop -->
+    <div id="sidebarBackdrop" class="fixed inset-0 bg-black/80 z-[100] lg:hidden hidden" onclick="toggleSidebar()"></div>
+
+    <!-- SideNavBar -->
+    <aside id="mainSidebar" class="fixed lg:static inset-y-0 left-0 w-64 bg-[#f8f9fa] dark:bg-[#191c1d] border-r border-[#edeeef]/15 dark:border-white/5 flex flex-col font-headline font-semibold text-sm transform -translate-x-full lg:translate-x-0 transition-transform duration-300 z-[110] shrink-0">
+        <div class="p-8">
+            <div class="flex items-center justify-between mb-10">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-white shadow-lg">
+                        <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">eco</span>
+                    </div>
+                    <div>
+                        <h1 class="text-on-surface dark:text-white font-headline font-black uppercase tracking-tighter text-lg">Agro Visor</h1>
+                    </div>
+                </div>
+                <button onclick="toggleSidebar()" class="lg:hidden p-2 rounded-full hover:bg-surface-container dark:hover:bg-white/10 text-on-surface dark:text-white">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <nav class="space-y-1">
+                <a class="group flex items-center space-x-3 py-4 px-6 text-secondary dark:text-secondary/70 opacity-80 hover:bg-[#edeeef] dark:hover:bg-white/5 hover:opacity-100 transition-all cursor-pointer active:scale-95 duration-150" href="{{ url_for('dashboard') }}">
+                    <span class="material-symbols-outlined">map</span>
+                    <span data-i18n="sidebar_explorer">Explorador</span>
+                </a>
+                <a class="group flex items-center space-x-3 py-4 px-6 text-secondary dark:text-secondary/70 opacity-80 hover:bg-[#edeeef] dark:hover:bg-white/5 hover:opacity-100 transition-all cursor-pointer active:scale-95 duration-150" href="{{ url_for('tendencias') }}">
+                    <span class="material-symbols-outlined">trending_up</span>
+                    <span data-i18n="sidebar_trends">Tendencias</span>
+                </a>
+                <a class="group flex items-center space-x-3 py-4 px-6 text-primary dark:text-primary-fixed border-r-4 border-primary dark:border-primary-fixed bg-[#edeeef] dark:bg-white/5 transition-all cursor-pointer active:scale-95 duration-150" href="{{ url_for('carga_datos') }}">
+                    <span class="material-symbols-outlined">cloud_upload</span>
+                    <span data-i18n="sidebar_upload">Carga de Datos</span>
+                </a>
+                <a class="group flex items-center space-x-3 py-4 px-6 text-secondary dark:text-secondary/70 opacity-80 hover:bg-[#edeeef] dark:hover:bg-white/5 hover:opacity-100 transition-all cursor-pointer active:scale-95 duration-150" href="{{ url_for('configuracion') }}">
+                    <span class="material-symbols-outlined">settings</span>
+                    <span data-i18n="sidebar_config">Configuración</span>
+                </a>
+            </nav>
+        </div>
+        <div class="mt-auto p-8 border-t border-[#edeeef]/15 dark:border-white/5">
+            <a class="group flex items-center space-x-3 py-4 px-6 text-error opacity-80 hover:bg-error/10 hover:opacity-100 transition-all cursor-pointer active:scale-95 duration-150" href="{{ url_for('logout') }}">
+                <span class="material-symbols-outlined">logout</span>
+                <span data-i18n="nav_logout">Cerrar Sesión</span>
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col h-full overflow-hidden">
+        <!-- Header -->
+        <header class="flex justify-between items-center px-4 lg:px-8 h-16 w-full z-40 bg-white dark:bg-[#191c1d] shadow-sm shrink-0 border-b dark:border-white/5">
+            <div class="flex items-center space-x-4 lg:space-x-6">
+                <button onclick="toggleSidebar()" class="lg:hidden p-2 rounded-lg hover:bg-surface-container dark:hover:bg-white/10 text-secondary dark:text-primary-fixed">
+                    <span class="material-symbols-outlined">menu_open</span>
+                </button>
+                <h2 class="font-headline tracking-tight font-bold text-lg lg:text-xl text-primary dark:text-primary-fixed" data-i18n="upload_title">Carga de Capas Geoespaciales</h2>
+            </div>
+            <div class="flex items-center space-x-3 lg:space-x-4">
+                <button onclick="showNotifications()" class="relative hidden lg:flex p-2 rounded-full hover:bg-surface-container dark:hover:bg-white/10 transition-all cursor-pointer active:scale-95">
+                    <span class="material-symbols-outlined text-secondary dark:text-secondary/70">notifications</span>
+                    <span class="notification-badge hidden absolute top-[2px] right-[2px] w-2.5 h-2.5 bg-error rounded-full animate-pulse border-2 border-white dark:border-[#191c1d]"></span>
+                </button>
+                <div class="hidden lg:block w-[1px] h-6 bg-outline-variant/30 mx-2"></div>
+                
+                <!-- Profile Section (Matches Screenshot) -->
+                <div class="flex items-center space-x-3">
+                    <div class="hidden sm:block text-right">
+                        <p class="text-xs font-black font-headline text-on-surface dark:text-white line-clamp-1">{{ current_user.nombre }}</p>
+                        <p class="text-[10px] text-secondary/60 dark:text-secondary/40 uppercase tracking-widest font-bold">{{ current_user.rol }}</p>
+                    </div>
+                    <div class="w-10 h-10 rounded-xl bg-[#b4f4c7] text-[#00210e] flex items-center justify-center font-bold text-sm shadow-sm shrink-0">
+                        {{ current_user.nombre[:2] | upper }}
+                    </div>
+                </div>
+
+                <div class="lg:block w-[1px] h-6 bg-outline-variant/30 mx-2"></div>
+
+                <!-- Mini Theme/Lang for Dash -->
+                <div class="flex items-center gap-1.5">
+                    <button onclick="toggleTheme()" class="p-2 rounded-full hover:bg-surface-container dark:hover:bg-white/10 text-secondary dark:text-primary-fixed transition-colors">
+                        <span class="material-symbols-outlined dark:hidden">dark_mode</span>
+                        <span class="material-symbols-outlined hidden dark:block">light_mode</span>
+                    </button>
+                    <button onclick="updateLanguage(document.documentElement.lang === 'es' ? 'en' : 'es')" class="w-8 h-8 rounded-full hover:bg-surface-container dark:hover:bg-white/10 flex items-center justify-center text-[10px] font-black uppercase text-secondary dark:text-secondary/70 transition-colors">
+                        <span data-lang-toggle>EN</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Content Area -->
+        <div class="flex-1 p-4 lg:p-8 overflow-y-auto custom-scrollbar space-y-10">
+            <!-- Recent Submissions Table -->
+            <div class="space-y-6">
+                <h4 class="font-headline font-bold text-primary dark:text-primary-fixed text-xl" data-i18n="proc_status">Historial de Procesamiento</h4>
+                <div class="bg-white dark:bg-[#191c1d] rounded-3xl border border-outline-variant/10 dark:border-white/5 overflow-hidden shadow-sm">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left min-w-[600px]">
+                            <thead class="bg-surface-container-low dark:bg-white/5 border-b border-outline-variant/10 dark:border-white/10 text-[10px] uppercase font-black text-secondary dark:text-secondary/70 tracking-widest">
+                                <tr>
+                                    <th class="px-8 py-5">Archivo</th>
+                                    <th class="px-8 py-5">Fecha</th>
+                                    <th class="px-8 py-5">Tamaño</th>
+                                    <th class="px-8 py-5">Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tablaHistorial" class="text-sm font-medium divide-y divide-outline-variant/5 dark:divide-white/5 text-on-surface dark:text-on-surface-variant">
+                                {% if historial %}
+                                    {% for record in historial %}
+                                    <tr class="hover:bg-surface-container-low dark:hover:bg-white/5 transition-colors">
+                                        <td class="px-8 py-5 dark:text-white">{{ record.filename }}</td>
+                                        <td class="px-8 py-5 text-xs dark:text-secondary/70">{{ record.fecha.strftime('%d %b %Y') }}</td>
+                                        <td class="px-8 py-5 text-xs text-secondary dark:text-secondary/70">{{ "%.2f"|format(record.size_mb) }} MB</td>
+                                        <td class="px-8 py-5">
+                                            <span class="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-[10px] font-black px-3 py-1 rounded-full border border-green-200 dark:border-green-800/50 uppercase tracking-tighter">{{ record.estado }}</span>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr id="emptyHistoryRow">
+                                         <td colspan="4" class="px-8 py-5 text-center text-xs text-secondary/50 italic">Aún no has procesado archivos hoy.</td>
+                                    </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script>
+    function toggleSidebar() {
+        const sidebar = document.getElementById('mainSidebar');
+        const backdrop = document.getElementById('sidebarBackdrop');
+        sidebar.classList.toggle('-translate-x-full');
+        backdrop.classList.toggle('hidden');
+    }
+
+
+</script>
+{% endblock %}

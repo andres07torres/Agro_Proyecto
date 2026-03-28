@@ -1,0 +1,82 @@
+{% set hide_footer = True %}
+{% extends 'base.html' %}
+
+{% block title %}Iniciar Sesión{% endblock %}
+
+{% block content %}
+<div class="min-h-[calc(100vh-64px)] flex items-center justify-center bg-background dark:bg-[#0b0d0e] px-6 py-16 lg:py-0 transition-colors duration-500">
+    <div class="max-w-md w-full mt-10 lg:mt-0">
+        <!-- Card -->
+        <div class="bg-white dark:bg-[#191c1d] rounded-[2rem] shadow-xl shadow-primary/5 border border-outline-variant/10 dark:border-white/5 p-10 relative overflow-hidden transition-all duration-500">
+            <!-- Decorative circle -->
+            <div class="absolute -top-12 -right-12 w-32 h-32 bg-primary/5 rounded-full blur-3xl"></div>
+            
+            <div class="relative z-10">
+                <!-- Header -->
+                <div class="text-center mb-10">
+                    <div class="w-16 h-16 bg-primary dark:bg-primary-fixed rounded-2xl flex items-center justify-center text-white dark:text-on-primary-fixed mx-auto mb-6 shadow-lg rotate-3">
+                        <span class="material-symbols-outlined text-3xl" style="font-variation-settings: 'FILL' 1;">eco</span>
+                    </div>
+                    <h1 class="font-headline font-black text-3xl text-primary dark:text-primary-fixed tracking-tight" data-i18n="login_title">Bienvenido</h1>
+                    <p class="text-secondary dark:text-secondary/70 text-sm mt-2 font-medium" data-i18n="login_subtitle">Ingresa tus credenciales para acceder al visor</p>
+                </div>
+
+                <!-- Flash Messages -->
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                  {% if messages %}
+                    {% for category, message in messages %}
+                      <div class="mb-6 p-4 rounded-xl text-sm font-medium border
+                        {% if category == 'danger' %} bg-error-container text-on-error-container border-error/10 {% else %} bg-primary/10 text-primary border-primary/10 {% endif %}">
+                        {{ message }}
+                      </div>
+                    {% endfor %}
+                  {% endif %}
+                {% endwith %}
+
+                <form method="POST" action="{{ url_for('login') }}" class="space-y-6">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div>
+                        <label for="email" class="block text-xs font-black text-secondary dark:text-secondary/70 uppercase tracking-widest mb-2 pl-1" data-i18n="email_label">Correo Electrónico</label>
+                        <div class="relative">
+                            <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline dark:text-outline-variant text-xl">mail</span>
+                            <input type="email" id="email" name="email" required 
+                                class="w-full bg-surface-container-low dark:bg-white/5 border-none dark:text-white rounded-2xl py-4 pl-12 pr-4 text-sm focus:ring-2 focus:ring-primary/20 transition-all placeholder-outline/50"
+                                placeholder="tu@correo.com">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="password" class="block text-xs font-black text-secondary dark:text-secondary/70 uppercase tracking-widest mb-2 pl-1" data-i18n="pass_label">Contraseña</label>
+                        <div class="relative">
+                            <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline dark:text-outline-variant text-xl">lock</span>
+                            <input type="password" id="password" name="password" required 
+                                class="w-full bg-surface-container-low dark:bg-white/5 border-none dark:text-white rounded-2xl py-4 pl-12 pr-4 text-sm focus:ring-2 focus:ring-primary/20 transition-all placeholder-outline/50"
+                                placeholder="••••••••">
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between px-1">
+                        <label class="flex items-center space-x-2 cursor-pointer group">
+                            <input type="checkbox" name="remember" class="w-4 h-4 rounded border-outline-variant dark:border-white/10 text-primary dark:text-primary-fixed focus:ring-primary/20 dark:bg-white/5">
+                            <span class="text-xs text-secondary dark:text-secondary/70 font-medium group-hover:text-on-surface dark:group-hover:text-white transition-colors" data-i18n="remember_me">Recordarme</span>
+                        </label>
+                        <a href="#" class="text-xs font-bold text-primary-fixed-dim dark:text-primary-fixed hover:text-primary transition-colors" data-i18n="forgot_pass">¿Olvidaste tu contraseña?</a>
+                    </div>
+
+                    <button type="submit" class="px-10 forest-gradient text-white py-3 rounded-full font-black uppercase tracking-widest text-[10px] shadow-lg shadow-primary/20 hover:brightness-110 active:scale-[0.98] transition-all flex items-center justify-center gap-2 mx-auto">
+                        <span data-i18n="btn_login">Iniciar Sesión</span>
+                        <span class="material-symbols-outlined text-xl">login</span>
+                    </button>
+                </form>
+
+                <div class="mt-10 text-center">
+                    <p class="text-xs text-secondary dark:text-secondary/70 font-medium">
+                        <span data-i18n="no_account">¿No tienes una cuenta?</span>
+                        <a href="{{ url_for('register') }}" class="text-primary dark:text-primary-fixed font-black hover:underline underline-offset-4 ml-1" data-i18n="register_link">Regístrate gratis</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

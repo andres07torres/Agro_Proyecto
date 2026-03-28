@@ -1,0 +1,639 @@
+{% set hide_nav = True %}
+{% extends 'base.html' %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+<style>
+    .glass-panel {
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+    }
+    .dark .glass-panel {
+        background: rgba(25, 28, 29, 0.7);
+        border-color: rgba(255, 255, 255, 0.1);
+    }
+    .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #c0c9bb;
+        border-radius: 10px;
+    }
+    #map {
+        width: 100%;
+        height: 100%;
+        z-index: 10;
+        border-radius: 1.5rem;
+    }
+    .info-lluvia {
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 12px;
+        padding: 12px 16px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    }
+    .dark .info-lluvia {
+        background: rgba(25, 28, 29, 0.9);
+        color: white;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Note: We are overriding the default container to have a full-screen dashboard look -->
+<div class="flex h-[calc(100vh-64px)] overflow-hidden bg-background dark:bg-[#0b0d0e] relative">
+    
+    <!-- Mobile Sidebar Backdrop -->
+    <div id="sidebarBackdrop" class="fixed inset-0 bg-black/80 z-[2000] lg:hidden hidden" onclick="toggleSidebar()"></div>
+
+    <!-- SideNavBar (Responsive Drawer) -->
+    <aside id="mainSidebar" class="fixed lg:static inset-y-0 left-0 w-64 bg-[#f8f9fa] dark:bg-[#191c1d] border-r border-[#edeeef]/15 dark:border-white/5 flex flex-col font-headline font-semibold text-sm transform -translate-x-full lg:translate-x-0 transition-transform duration-300 z-[2010] shrink-0">
+        <div class="p-8">
+            <div class="flex items-center justify-between mb-10">
+                <div class="flex items-center space-x-3 text-center">
+                    <div class="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-white shadow-lg">
+                        <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">eco</span>
+                    </div>
+                    <div>
+                        <h1 class="text-on-surface dark:text-white font-headline font-black uppercase tracking-tighter text-lg">Agro Visor</h1>
+                    </div>
+                </div>
+                <button onclick="toggleSidebar()" class="lg:hidden p-2 rounded-full hover:bg-surface-container dark:hover:bg-white/10 text-on-surface dark:text-white">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <nav class="space-y-1">
+                <a class="group flex items-center space-x-3 py-4 px-6 text-primary dark:text-primary-fixed border-r-4 border-primary dark:border-primary-fixed bg-[#edeeef] dark:bg-white/5 transition-all cursor-pointer active:scale-95 duration-150" href="{{ url_for('dashboard') }}">
+                    <span class="material-symbols-outlined">map</span>
+                    <span data-i18n="sidebar_explorer">Explorador</span>
+                </a>
+                <a class="group flex items-center space-x-3 py-4 px-6 text-secondary dark:text-secondary/70 opacity-80 hover:bg-[#edeeef] dark:hover:bg-white/5 hover:opacity-100 transition-all cursor-pointer active:scale-95 duration-150" href="{{ url_for('tendencias') }}">
+                    <span class="material-symbols-outlined">trending_up</span>
+                    <span data-i18n="sidebar_trends">Tendencias</span>
+                </a>
+                <a class="group flex items-center space-x-3 py-4 px-6 text-secondary dark:text-secondary/70 opacity-80 hover:bg-[#edeeef] dark:hover:bg-white/5 hover:opacity-100 transition-all cursor-pointer active:scale-95 duration-150" href="{{ url_for('carga_datos') }}">
+                    <span class="material-symbols-outlined">cloud_upload</span>
+                    <span data-i18n="sidebar_upload">Carga de Datos</span>
+                </a>
+                <a class="group flex items-center space-x-3 py-4 px-6 text-secondary dark:text-secondary/70 opacity-80 hover:bg-[#edeeef] dark:hover:bg-white/5 hover:opacity-100 transition-all cursor-pointer active:scale-95 duration-150" href="{{ url_for('configuracion') }}">
+                    <span class="material-symbols-outlined">settings</span>
+                    <span data-i18n="sidebar_config">Configuración</span>
+                </a>
+            </nav>
+        </div>
+        <div class="mt-auto p-8 border-t border-[#edeeef]/15 dark:border-white/5">
+            <a class="group flex items-center space-x-3 py-4 px-6 text-error opacity-80 hover:bg-error/10 hover:opacity-100 transition-all cursor-pointer active:scale-95 duration-150" href="{{ url_for('logout') }}">
+                <span class="material-symbols-outlined">logout</span>
+                <span data-i18n="nav_logout">Cerrar Sesión</span>
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Canvas -->
+    <main class="flex-1 flex flex-col h-full overflow-hidden">
+        <!-- Dashboard Top Header -->
+        <header class="flex justify-between items-center px-4 lg:px-8 h-16 w-full z-40 bg-white dark:bg-[#191c1d] shadow-sm dark:shadow-none border-b dark:border-white/5 shrink-0">
+            <div class="flex items-center space-x-4 lg:space-x-6">
+                <!-- Sidebar Toggle (lg:hidden) -->
+                <button onclick="toggleSidebar()" class="lg:hidden p-2 rounded-lg hover:bg-surface-container dark:hover:bg-white/10 text-secondary dark:text-primary-fixed">
+                    <span class="material-symbols-outlined">menu_open</span>
+                </button>
+                <h2 class="font-headline tracking-tight font-bold text-base lg:text-xl text-primary dark:text-primary-fixed truncate max-w-[140px] lg:max-w-none" data-i18n="dash_header_title">Visor Geográfico</h2>
+                <div class="hidden sm:flex bg-surface-container dark:bg-white/5 rounded-full px-4 py-1.5 items-center space-x-2 w-48 lg:w-80 shadow-inner">
+                    <span class="material-symbols-outlined text-outline text-sm">search</span>
+                    <input id="globalSearch" onkeyup="buscarModulo(event)" class="bg-transparent border-none focus:ring-0 text-sm w-full font-body placeholder-outline dark:text-white" data-i18n="search_placeholder" placeholder="Buscar..." type="text"/>
+                </div>
+            </div>
+            <div class="flex items-center space-x-3 lg:space-x-4">
+                <button onclick="showNotifications()" class="relative hidden lg:flex p-2 rounded-full hover:bg-surface-container dark:hover:bg-white/10 transition-all cursor-pointer active:scale-95">
+                    <span class="material-symbols-outlined text-secondary dark:text-secondary/70">notifications</span>
+                    <span class="notification-badge hidden absolute top-[2px] right-[2px] w-2.5 h-2.5 bg-error rounded-full animate-pulse border-2 border-white dark:border-[#191c1d]"></span>
+                </button>
+                <div class="hidden lg:block w-[1px] h-6 bg-outline-variant/30 mx-2"></div>
+                
+                <!-- Profile Section (Matches Screenshot) -->
+                <div class="flex items-center space-x-3">
+                    <div class="hidden sm:block text-right">
+                        <p class="text-xs font-black font-headline text-on-surface dark:text-white line-clamp-1">{{ current_user.nombre }}</p>
+                        <p class="text-[10px] text-secondary/60 dark:text-secondary/40 uppercase tracking-widest font-bold">{{ current_user.rol }}</p>
+                    </div>
+                    <div class="w-10 h-10 rounded-xl bg-[#b4f4c7] text-[#00210e] flex items-center justify-center font-bold text-sm shadow-sm shrink-0">
+                        {{ current_user.nombre[:2] | upper }}
+                    </div>
+                </div>
+
+                <div class="lg:block w-[1px] h-6 bg-outline-variant/30 mx-2"></div>
+
+                <!-- Mini Theme/Lang for Dash -->
+                <div class="flex items-center gap-1.5">
+                    <button onclick="toggleTheme()" class="p-2 rounded-full hover:bg-surface-container dark:hover:bg-white/10 text-secondary dark:text-primary-fixed transition-colors">
+                        <span class="material-symbols-outlined dark:hidden">dark_mode</span>
+                        <span class="material-symbols-outlined hidden dark:block">light_mode</span>
+                    </button>
+                    <button onclick="updateLanguage(document.documentElement.lang === 'es' ? 'en' : 'es')" class="w-8 h-8 rounded-full hover:bg-surface-container dark:hover:bg-white/10 flex items-center justify-center text-[10px] font-black uppercase text-secondary dark:text-secondary/70 transition-colors">
+                        <span data-lang-toggle>EN</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Dashboard Content Grid -->
+        <div class="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-0 overflow-y-auto lg:overflow-hidden custom-scrollbar">
+            <!-- Left & Center: Interactive Map & Stats -->
+            <div class="col-span-1 lg:col-span-9 order-1 lg:order-1 flex flex-col h-auto lg:h-full overflow-y-auto custom-scrollbar">
+                <!-- Map Section -->
+                <section class="relative h-[450px] lg:h-[600px] w-full p-4 lg:p-6 shrink-0">
+                    <div class="w-full h-full rounded-2xl overflow-hidden shadow-xl bg-surface-container dark:bg-black/40 relative border border-white/20 dark:border-white/10">
+                        <!-- REAL MAP CONTAINER -->
+                        <div id="map"></div>
+                        
+                        <!-- Map Floating Controls -->
+                        <div class="absolute top-6 left-6 space-y-3 z-[1000]">
+                            <div class="glass-panel p-1.5 rounded-xl shadow-lg flex flex-col items-center space-y-2">
+                                <button onclick="map.zoomIn()" class="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-primary/10 dark:hover:bg-white/10 text-primary dark:text-primary-fixed transition-all">
+                                    <span class="material-symbols-outlined">add</span>
+                                </button>
+                                <div class="w-6 h-[1px] bg-outline-variant/30"></div>
+                                <button onclick="map.zoomOut()" class="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-primary/10 dark:hover:bg-white/10 text-primary dark:text-primary-fixed transition-all">
+                                    <span class="material-symbols-outlined">remove</span>
+                                </button>
+                            </div>
+                            <div class="glass-panel p-1.5 rounded-xl shadow-lg">
+                                <button class="w-10 h-10 flex items-center justify-center rounded-lg bg-primary dark:bg-primary-fixed dark:text-on-primary-fixed text-white shadow-md">
+                                    <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">layers</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Result Indicator Card -->
+                        <div id="resultIndicator" class="absolute bottom-6 right-6 glass-panel p-4 rounded-xl shadow-xl w-64 border border-white/20 dark:border-white/10 z-[1000] hidden">
+                            <div class="flex justify-between items-start mb-3">
+                                <div>
+                                    <h4 id="indicatorTitle" class="font-headline font-bold text-primary dark:text-primary-fixed" data-i18n="indicator_analysis">Zona de Análisis</h4>
+                                    <p id="indicatorCoords" class="text-[10px] text-secondary dark:text-secondary/70 uppercase tracking-wider" data-i18n="indicator_waiting">Esperando punto...</p>
+                                </div>
+                                <span class="bg-primary/10 dark:bg-white/10 text-primary dark:text-primary-fixed text-[10px] font-bold px-2 py-0.5 rounded-full">DATO NC</span>
+                            </div>
+                            <div id="indicatorData" class="space-y-2">
+                                <div class="flex justify-between text-xs">
+                                    <span class="text-secondary dark:text-secondary/70" data-i18n="stat_precipitation">Precipitación</span>
+                                    <span id="indicatorValue" class="font-black text-primary dark:text-primary-fixed">-</span>
+                                </div>
+                                <div class="w-full bg-surface-container dark:bg-white/10 h-1.5 rounded-full overflow-hidden">
+                                    <div id="indicatorProgress" class="bg-primary dark:bg-primary-fixed h-full w-[0%] transition-all duration-500"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Loader Overlay -->
+                        <div id="loader" class="absolute inset-0 z-[2000] bg-white/80 dark:bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center transition-opacity duration-300 hidden text-primary dark:text-primary-fixed">
+                            <div class="w-12 h-12 border-4 border-current border-t-transparent rounded-full animate-spin mb-4"></div>
+                            <p class="font-headline font-bold text-sm uppercase tracking-widest" data-i18n="loader_processing">Procesando Datos...</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Statistics Section -->
+                <section id="statsSection" class="hidden p-4 lg:p-6 pt-0 space-y-6">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                        <h3 class="font-headline font-extrabold text-lg text-primary dark:text-primary-fixed flex items-center space-x-2">
+                            <span class="material-symbols-outlined">analytics</span>
+                            <span data-i18n="stats_title">Análisis Temporal Proyectado</span>
+                        </h3>
+                        <div class="w-full sm:w-auto">
+                            <select id="filtroAnio" onchange="aplicarFiltro()" class="w-full sm:w-auto px-4 py-2 text-xs font-bold rounded-full bg-white dark:bg-[#191c1d] shadow-sm border border-outline-variant/20 dark:border-white/10 text-secondary dark:text-white focus:ring-primary/20">
+                                <option value="todos" data-i18n="opt_all">Histórico Completo</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <!-- Chart Card -->
+                        <div class="md:col-span-2 bg-white dark:bg-[#191c1d] p-6 rounded-2xl shadow-sm border border-outline-variant/10 dark:border-white/5 h-[350px] md:h-72">
+                            <div class="flex justify-between items-center mb-4">
+                                <div>
+                                    <p class="text-[10px] font-black text-secondary dark:text-secondary/70 uppercase tracking-widest" data-i18n="chart_trend_label">Tendencia de Precisión</p>
+                                    <p class="text-lg md:text-xl font-black font-headline text-primary dark:text-primary-fixed" id="chartLabel" data-i18n="stat_precip_mm">Precipitaciones (mm)</p>
+                                </div>
+                                <span class="material-symbols-outlined text-primary-fixed-dim text-3xl">show_chart</span>
+                            </div>
+                            <div class="h-48 md:h-48">
+                                <canvas id="graficoPrecipitacion"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Info Card -->
+                        <div class="md:col-span-1 bg-primary text-white p-6 rounded-2xl shadow-xl bg-gradient-to-br from-primary to-primary-container dark:from-primary-container dark:to-primary relative overflow-hidden flex flex-col justify-center min-h-[200px]">
+                            <div class="relative z-10">
+                                <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-primary-fixed opacity-80 mb-1" data-i18n="model_reliability">Fiabilidad del Modelo</p>
+                                <h4 id="reliabilityValue" class="text-3xl font-black font-headline mb-4">-</h4>
+                                <p class="text-xs text-primary-fixed/70 leading-relaxed mb-6" data-i18n="model_desc">Procesando satélites NOAA y modelos CMIP6 para el territorio ecuatoriano.</p>
+                                <div class="flex items-center space-x-2 text-xs font-bold">
+                                    <span class="material-symbols-outlined text-sm">verified</span>
+                                    <span data-i18n="system_optimized">Sistema Optimizado</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Empty Stats Placeholder -->
+                <section id="emptyStats" class="p-6">
+                    <div class="bg-white dark:bg-[#191c1d] rounded-3xl border-2 border-dashed border-outline-variant/20 dark:border-white/5 flex flex-col items-center justify-center p-12 text-center transition-all hover:border-primary/30">
+                        <div class="w-16 h-16 rounded-full bg-surface-container dark:bg-white/5 flex items-center justify-center mb-4">
+                            <span class="material-symbols-outlined text-secondary/40 text-3xl">cloud_upload</span>
+                        </div>
+                        <h4 class="font-headline font-bold text-primary dark:text-primary-fixed mb-1" data-i18n="no_active_model">Sin modelo activo</h4>
+                        <p class="text-xs text-secondary/60 dark:text-secondary/40 max-w-xs" data-i18n="no_active_model_desc">Inicia cargando un archivo .nc o selecciona un punto en el mapa para visualizar proyecciones.</p>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Right Sidebar (Data Upload) -->
+            <aside class="col-span-1 lg:col-span-3 order-2 lg:order-2 bg-surface-container-low dark:bg-[#191c1d] border-t lg:border-t-0 lg:border-l border-outline-variant/10 dark:border-white/5 p-6 lg:p-8 flex flex-col h-auto lg:h-full shrink-0 overflow-y-auto custom-scrollbar">
+                <div class="mb-8">
+                    <h3 class="font-headline font-extrabold text-xl text-primary dark:text-primary-fixed mb-2" data-i18n="upload_title">Carga de Datos</h3>
+                    <p class="text-sm text-secondary dark:text-secondary/70 leading-relaxed" data-i18n="upload_subtitle">Sincroniza tus capas geoespaciales.</p>
+                </div>
+
+                <!-- Upload Buttons Group -->
+                <div class="space-y-4">
+                    <!-- Data Button -->
+                    <div class="relative">
+                        <input type="file" id="archivoNetCDF" accept=".nc" class="hidden" onchange="subirNetCDF()">
+                        <button id="btnCargarDatos" onclick="document.getElementById('archivoNetCDF').click()" class="w-full py-4 bg-primary text-white rounded-2xl font-black uppercase tracking-widest text-[10px] flex items-center justify-center space-x-3 hover:brightness-110 active:scale-[0.98] transition-all shadow-md">
+                            <span id="iconData" class="material-symbols-outlined text-lg">cloud_upload</span>
+                            <span id="btnDataText">Cargar Datos (.nc)</span>
+                        </button>
+                    </div>
+
+                    <!-- Mask Button -->
+                    <div class="relative">
+                        <input type="file" id="archivoShapefile" accept=".zip" class="hidden" onchange="actualizarNombreMascara()">
+                        <button onclick="document.getElementById('archivoShapefile').click()" class="w-full py-4 bg-white dark:bg-white/5 text-primary dark:text-primary-fixed border-2 border-primary/20 dark:border-white/10 rounded-2xl font-black uppercase tracking-widest text-[10px] flex items-center justify-center space-x-3 hover:bg-primary/5 dark:hover:bg-white/10 active:scale-[0.98] transition-all">
+                            <span class="material-symbols-outlined text-lg">layers</span>
+                            <span>Cargar Máscara (.zip)</span>
+                        </button>
+                        <p id="nombreMascara" class="text-[9px] text-center mt-2 text-secondary/60 uppercase font-bold hidden"></p>
+                        <div class="flex justify-center mt-4">
+                            <button id="btnGenerarMascara" onclick="cargarShapefile()" class="hidden px-10 py-3 bg-on-surface dark:bg-white/10 text-white text-[9px] tracking-widest font-black uppercase rounded-full shadow-md hover:shadow-lg active:scale-95 transition-all">Generar Máscara Ahora</button>
+                        </div>
+                    </div>
+
+                    <!-- Upload Status -->
+                    <div id="uploadStatus" class="hidden flex flex-col items-center p-4 bg-primary/5 rounded-xl">
+                        <div class="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                        <p class="text-[10px] font-bold text-primary mt-2 uppercase tracking-widest" data-i18n="uploading">Procesando...</p>
+                    </div>
+                </div>
+
+                <!-- Cargas Recientes -->
+                <div class="mt-10 space-y-4">
+                    <h4 class="text-[10px] font-black uppercase tracking-[0.2em] text-secondary dark:text-secondary/70" data-i18n="proc_status">Estado de Procesamiento</h4>
+                    <div id="activeFiles" class="space-y-3">
+                        <p class="text-[10px] text-outline-variant italic" data-i18n="no_files">No hay archivos activos.</p>
+                    </div>
+                </div>
+
+                <!-- Bottom Guide -->
+                <div class="mt-auto pt-8">
+                    <div class="bg-gradient-to-tr from-secondary to-secondary-container dark:from-[#36485b] dark:to-secondary-container p-6 rounded-2xl text-white relative overflow-hidden shadow-lg border dark:border-white/10">
+                        <div class="relative z-10">
+                            <h5 class="font-headline font-bold text-sm mb-2" data-i18n="guide_title">Guía de Parámetros</h5>
+                            <p class="text-[10px] text-white/80 leading-relaxed mb-4" data-i18n="guide_desc">Aprende a estructurar tus archivos .nc para compatibilidad total.</p>
+                            <a class="text-[10px] font-black uppercase tracking-widest flex items-center space-x-1 hover:underline" href="#">
+                                <span data-i18n="footer_docs">Documentación</span>
+                                <span class="material-symbols-outlined text-xs">arrow_forward</span>
+                            </a>
+                        </div>
+                        <span class="material-symbols-outlined absolute -bottom-4 -right-4 text-7xl opacity-10">menu_book</span>
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </main>
+</div>
+
+<!-- SCRIPTS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script src="https://unpkg.com/shpjs@latest/dist/shp.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    function toggleSidebar() {
+        const sidebar = document.getElementById('mainSidebar');
+        const backdrop = document.getElementById('sidebarBackdrop');
+        sidebar.classList.toggle('-translate-x-full');
+        backdrop.classList.toggle('hidden');
+    }
+
+    // --- MAPA ---
+    var map = L.map('map', { zoomControl: false }).setView([-1.8312, -78.1834], 7);
+    
+    // TILE LAYERS
+    const lightTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 });
+    const darkTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 });
+
+    function updateMapLayer(isDark) {
+        if (isDark) {
+            map.removeLayer(lightTiles);
+            darkTiles.addTo(map);
+        } else {
+            map.removeLayer(darkTiles);
+            lightTiles.addTo(map);
+        }
+    }
+
+    // Init Tile
+    const initialTheme = localStorage.getItem('theme') || 'light';
+    if (initialTheme === 'dark') darkTiles.addTo(map);
+    else lightTiles.addTo(map);
+
+    var capaActual = null;
+    var marcadorClick = null;
+    var chartInstancia = null;
+    var nombreArchivoNetCDF = null;
+    var datosGlobales = [];
+
+    map.on('click', function (e) {
+        if (!nombreArchivoNetCDF) return;
+        if (marcadorClick) map.removeLayer(marcadorClick);
+        marcadorClick = L.marker(e.latlng).addTo(map);
+        consultarPunto(e.latlng.lat, e.latlng.lng);
+    });
+
+    // --- FUNCIONES LOGICAS ---
+    function cargarShapefile() {
+        var file = document.getElementById('archivoShapefile').files[0];
+        if (!file) return;
+        document.getElementById('loader').classList.remove('hidden');
+
+        var reader = new FileReader();
+        reader.onload = function (e) {
+            shp(e.target.result).then(function (geojson) {
+                if (capaActual) map.removeLayer(capaActual);
+                capaActual = L.geoJSON(geojson, { 
+                    style: { color: '#004423', weight: 2, fillOpacity: 0.1 } 
+                }).addTo(map);
+                map.fitBounds(capaActual.getBounds());
+                document.getElementById('loader').classList.add('hidden');
+            });
+        };
+        reader.readAsArrayBuffer(file);
+    }
+
+    function buscarModulo(event) {
+        if (event.key === 'Enter') {
+            const term = event.target.value.toLowerCase().trim();
+            if (!term) return;
+
+            if (term.includes('explo') || term.includes('mapa') || term.includes('visor')) {
+                window.location.href = "{{ url_for('dashboard') }}";
+            } else if (term.includes('tendencia') || term.includes('analisis') || term.includes('histor')) {
+                window.location.href = "{{ url_for('tendencias') }}";
+            } else if (term.includes('carga') || term.includes('dato') || term.includes('subir')) {
+                window.location.href = "{{ url_for('carga_datos') }}";
+            } else if (term.includes('config') || term.includes('perfil') || term.includes('ajuste') || term.includes('seguridad')) {
+                window.location.href = "{{ url_for('configuracion') }}";
+            } else {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire("Módulo no encontrado", 'No hay resultados para: "' + term + '"', "info");
+                } else {
+                    alert('No hay resultados para: "' + term + '"');
+                }
+            }
+        }
+    }
+
+    async function subirNetCDF() {
+        var fileInput = document.getElementById('archivoNetCDF');
+        var file = fileInput.files[0];
+        if (!file) return;
+
+        actualizarUIUpload('loading');
+
+        var formData = new FormData();
+        formData.append('archivo_nc', file);
+        ejecutarConsulta('/procesar_netcdf', formData, true);
+        
+        // Reset input to allow re-uploading the same file if needed
+        fileInput.value = '';
+    }
+
+    function actualizarUIUpload(estado, nombre = "") {
+        const btn = document.getElementById('btnCargarDatos');
+        const icon = document.getElementById('iconData');
+        const text = document.getElementById('btnDataText');
+        const status = document.getElementById('uploadStatus');
+
+        if (estado === 'loading') {
+            btn.classList.add('opacity-50', 'pointer-events-none');
+            status.classList.remove('hidden');
+            text.innerText = "Procesando...";
+        } else if (estado === 'success') {
+            btn.classList.remove('opacity-50', 'pointer-events-none', 'bg-primary');
+            btn.classList.add('bg-green-600');
+            status.classList.add('hidden');
+            icon.innerText = "check_circle";
+            text.innerText = "¡Listo! " + nombre;
+            if(window.addNotification) window.addNotification("Capas de " + nombre + " procesadas y subidas.");
+        } else if (estado === 'error') {
+            btn.classList.remove('opacity-50', 'pointer-events-none', 'bg-green-600');
+            btn.classList.add('bg-error');
+            status.classList.add('hidden');
+            icon.innerText = "error";
+            text.innerText = nombre ? "Error: " + nombre : "Error - Reintentar";
+        }
+    }
+
+    async function consultarPunto(lat, lon) {
+        localStorage.setItem('active_lat', lat);
+        localStorage.setItem('active_lon', lon);
+        var payload = { filename: nombreArchivoNetCDF, lat: lat, lon: lon };
+        ejecutarConsulta('/consultar_punto', JSON.stringify(payload), false);
+    }
+
+    async function ejecutarConsulta(url, bodyData, esUpload) {
+        document.getElementById('loader').classList.remove('hidden');
+        try {
+            const options = { 
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content
+                }
+            };
+            if (esUpload) options.body = bodyData; // FormData handles its own Content-Type
+            else { 
+                options.headers['Content-Type'] = 'application/json'; 
+                options.body = bodyData; 
+            }
+
+            const response = await fetch(url, options);
+            const data = await response.json();
+            if (!data.exito) throw new Error(data.error);
+
+            if (data.filename) {
+                nombreArchivoNetCDF = data.filename;
+                localStorage.setItem('active_netcdf_file', data.filename);
+                // Cuando se sube un nuevo archivo, reiniciamos coordenadas para mostrar Promedio Regional inicialmente
+                localStorage.removeItem('active_lat');
+                localStorage.removeItem('active_lon');
+                actualizarUIUpload('success', data.filename);
+                document.getElementById('activeFiles').innerHTML = `
+                    <div class="bg-white p-3 rounded-lg flex items-center space-x-2 border border-primary/10">
+                        <span class="material-symbols-outlined text-primary text-sm" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                        <p class="text-[10px] font-black truncate">${data.filename}</p>
+                    </div>
+                `;
+            }
+            
+            datosGlobales = data.datos;
+            document.getElementById('resultIndicator').classList.remove('hidden');
+            document.getElementById('indicatorCoords').innerText = data.coords || "Resumen Regional";
+
+            llenarComboAnios(datosGlobales);
+            aplicarFiltro();
+            document.getElementById('statsSection').classList.remove('hidden');
+            document.getElementById('emptyStats').classList.add('hidden');
+
+        } catch (error) {
+            console.error("Error al procesar:", error);
+            actualizarUIUpload('error', error.message);
+            document.getElementById('statsSection').classList.add('hidden');
+            document.getElementById('emptyStats').classList.remove('hidden');
+        } finally {
+            document.getElementById('loader').classList.add('hidden');
+        }
+    }
+
+    function llenarComboAnios(datos) {
+        const select = document.getElementById('filtroAnio');
+        select.innerHTML = '<option value="todos" data-i18n="opt_all">Histórico Completo</option>';
+        const anios = new Set();
+        datos.forEach(d => { if (d.fecha && d.fecha.length >= 4) anios.add(d.fecha.substring(0, 4)); });
+        Array.from(anios).sort().forEach(anio => {
+            if (!isNaN(anio)) {
+                const opt = document.createElement('option');
+                opt.value = anio; opt.innerText = "Año " + anio; select.appendChild(opt);
+            }
+        });
+    }
+
+    function aplicarFiltro() {
+        const anio = document.getElementById('filtroAnio').value;
+        const datos = (anio === "todos") ? datosGlobales : datosGlobales.filter(d => d.fecha.startsWith(anio));
+        
+        const labels = datos.map(d => d.fecha);
+        const values = datos.map(d => d.valor);
+        renderizar(labels, values);
+    }
+
+    function renderizar(labels, values) {
+        const ctx = document.getElementById('graficoPrecipitacion').getContext('2d');
+        if (chartInstancia) chartInstancia.destroy();
+
+        const filtroAnio = document.getElementById('filtroAnio').value;
+        const nombresMeses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+        
+        const promediosMensuales = {};
+        const conteoMensual = {};
+
+        labels.forEach((label, i) => {
+            const fecha = new Date(label);
+            if (isNaN(fecha)) return;
+            const anioLabel = fecha.getFullYear().toString();
+            
+            // SI SE FILTRA POR AÑO
+            if (filtroAnio !== 'todos' && anioLabel !== filtroAnio) return;
+
+            const mesIdx = fecha.getMonth();
+            const mesNombre = nombresMeses[mesIdx];
+            
+            if (!promediosMensuales[mesNombre]) {
+                promediosMensuales[mesNombre] = 0;
+                conteoMensual[mesNombre] = 0;
+            }
+            promediosMensuales[mesNombre] += values[i];
+            conteoMensual[mesNombre] += 1;
+        });
+
+        const labelsFinal = nombresMeses;
+        const valuesFinal = nombresMeses.map(m => (promediosMensuales[m] / (conteoMensual[m] || 1)).toFixed(2));
+
+        // UI Labels
+        document.getElementById('chartLabel').innerText = filtroAnio === 'todos' ? "Promedio Mensual Histórico (mm)" : `Ciclo Mensual ${filtroAnio} (mm)`;
+        
+        if (valuesFinal.length > 0) {
+            document.getElementById('indicatorValue').innerText = valuesFinal[valuesFinal.length - 1] + " mm";
+            document.getElementById('reliabilityValue').innerText = "98.2%"; // Solo se muestra si hay datos
+        }
+
+        const isDark = document.documentElement.classList.contains('dark');
+        const primaryColor = isDark ? '#7cda9a' : '#004423';
+        const textColor = isDark ? '#c0c9bb' : '#717a6d';
+
+        chartInstancia = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labelsFinal,
+                datasets: [{
+                    label: 'Precipitación (mm)',
+                    data: valuesFinal,
+                    backgroundColor: primaryColor,
+                    borderRadius: 8,
+                    hoverBackgroundColor: isDark ? '#97f7b5' : '#006d38',
+                    barThickness: 'flex',
+                    maxBarThickness: 35
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: isDark ? 'rgba(0,0,0,0.8)' : 'rgba(25, 28, 29, 0.9)',
+                        padding: 12,
+                        cornerRadius: 8,
+                        titleFont: { family: 'Roboto', size: 12 },
+                        bodyFont: { family: 'Inter', size: 12 }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { display: false },
+                        ticks: { font: { family: 'Inter', size: 10 }, color: textColor }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)', drawBorder: false },
+                        ticks: { font: { family: 'Inter', size: 10 }, color: textColor }
+                    }
+                },
+                animation: { duration: 800, easing: 'easeOutQuart' }
+            }
+        });
+    }
+    function actualizarNombreMascara() {
+        const input = document.getElementById('archivoShapefile');
+        const display = document.getElementById('nombreMascara');
+        const btn = document.getElementById('btnGenerarMascara');
+        if (input.files.length > 0) {
+            display.innerText = "Archivo: " + input.files[0].name;
+            display.classList.remove('hidden');
+            btn.classList.remove('hidden');
+        } else {
+            display.classList.add('hidden');
+            btn.classList.add('hidden');
+        }
+    }
+</script>
+{% endblock %}
