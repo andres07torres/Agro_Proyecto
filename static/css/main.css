@@ -1,7 +1,4 @@
 /* AGRO VISOR - GLOBAL STYLES */
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
 
 :root {
     --primary: #004423;
@@ -40,17 +37,4 @@
     background: rgba(151, 151, 151, 0.4);
 }
 
-/* Glassmorphism effects */
-.glass-panel {
-    @apply bg-white/70 dark:bg-black/40 backdrop-blur-md border border-white/20 dark:border-white/10;
-}
-
-/* Animations */
-@keyframes slideUp {
-    from { transform: translateY(20px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
-}
-
-.animate-slide-up {
-    animation: slideUp 0.6s ease-out forwards;
-}
+/* Animations are now in base.html */

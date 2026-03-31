@@ -29,9 +29,9 @@ def create_app(config_class='config.DevelopmentConfig'):
     from .site.routes import main_bp
     from .api.routes import api_bp
 
-    app.register_blueprint(auth_bp)
+    app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(main_bp)
-    app.register_blueprint(api_bp)
+    app.register_blueprint(api_bp, url_prefix='/api')
 
     # Security Headers
     @app.after_request
@@ -42,9 +42,9 @@ def create_app(config_class='config.DevelopmentConfig'):
         csp = (
             "default-src 'self'; "
             "script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://cdn.jsdelivr.net https://unpkg.com; "
-            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com; "
             "font-src 'self' https://fonts.gstatic.com; "
-            "img-src 'self' data: https://*.basemaps.cartocdn.com; "
+            "img-src 'self' data: https://*.basemaps.cartocdn.com https://*.googleusercontent.com https://unpkg.com; "
             "connect-src 'self';"
         )
         response.headers['Content-Security-Policy'] = csp

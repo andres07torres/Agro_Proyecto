@@ -131,6 +131,8 @@ window.toggleSidebar = function() {
     if (sidebar && backdrop) {
         sidebar.classList.toggle('-translate-x-full');
         backdrop.classList.toggle('hidden');
+        // Notify dynamic components (like the map) that the layout changed
+        window.dispatchEvent(new Event('resize'));
     }
 };
 

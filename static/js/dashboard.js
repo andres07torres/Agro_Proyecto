@@ -3,12 +3,7 @@
  * Manages Leaflet map, NetCDF data visualization, and interactive charts.
  */
 
-function toggleSidebar() {
-    const sidebar = document.getElementById('mainSidebar');
-    const backdrop = document.getElementById('sidebarBackdrop');
-    sidebar.classList.toggle('-translate-x-full');
-    backdrop.classList.toggle('hidden');
-}
+// Redundant sidebar logic removed (using app.js)
 
 // --- MAPA ---
 let map;
@@ -33,9 +28,40 @@ function initMap() {
     else lightTiles.addTo(map);
 
     map.on('click', function (e) {
-        if (!nombreArchivoNetCDF) return;
+        const lang = document.documentElement.lang || 'es';
+        
+        if (!nombreArchivoNetCDF) {
+            Swal.fire({
+                title: translations[lang]['swal_error_title'] || "Acción Requerida",
+                text: translations[lang]['swal_error_text'] || "Por favor, carga un archivo para comenzar.",
+                icon: 'info',
+                confirmButtonColor: '#004423',
+                confirmButtonText: translations[lang]['btn_ready'] || "Entendido",
+                background: document.documentElement.classList.contains('dark') ? '#191c1d' : '#fff',
+                color: document.documentElement.classList.contains('dark') ? '#fff' : '#000'
+            });
+            return;
+        }
+
+        // Show Toast
+        const Toast = Swal.mixin({
+            toast: true, position: 'top-end', showConfirmButton: false, timer: 2000, 
+            timerProgressBar: true, background: document.documentElement.classList.contains('dark') ? '#191c1d' : '#fff',
+            color: document.documentElement.classList.contains('dark') ? '#fff' : '#000'
+        });
+        Toast.fire({ icon: 'info', title: translations[lang]['toast_searching'] || "Consultando..." });
+
         if (marcadorClick) map.removeLayer(marcadorClick);
-        marcadorClick = L.marker(e.latlng).addTo(map);
+        
+        // Define Custom Pulse Icon (Sonar Effect)
+        const pulseIcon = L.divIcon({
+            className: 'custom-pulse-container',
+            html: '<div class="pulse-marker"></div>',
+            iconSize: [20, 20],
+            iconAnchor: [10, 10]
+        });
+
+        marcadorClick = L.marker(e.latlng, { icon: pulseIcon }).addTo(map);
         consultarPunto(e.latlng.lat, e.latlng.lng);
     });
 }
@@ -182,6 +208,15 @@ async function ejecutarConsulta(url, bodyData, esUpload) {
                     <p class="text-[10px] font-black truncate text-on-surface dark:text-white/80">${data.filename}</p>
                 </div>
             `;
+        } else if (!esUpload) {
+            // Show Success Toast for map clicks
+            const lang = document.documentElement.lang || 'es';
+            const Toast = Swal.mixin({
+                toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, 
+                timerProgressBar: true, background: document.documentElement.classList.contains('dark') ? '#191c1d' : '#fff',
+                color: document.documentElement.classList.contains('dark') ? '#fff' : '#000'
+            });
+            Toast.fire({ icon: 'success', title: translations[lang]['toast_success'] || "Análisis completado" });
         }
         
         datosGlobales = data.datos;
@@ -333,4 +368,14 @@ document.addEventListener('DOMContentLoaded', () => {
     initMap();
     // Re-check theme on map
     updateMapLayer(document.documentElement.classList.contains('dark'));
+    
+    // InvalidateSize fix: ensure tiles render after container settles
+    if (map) {
+        setTimeout(() => map.invalidateSize(), 400);
+        
+        // Listen for layout changes (like sidebar toggle)
+        window.addEventListener('resize', () => {
+            setTimeout(() => map.invalidateSize(), 50);
+        });
+    }
 });

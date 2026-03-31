@@ -148,6 +148,10 @@ const translations = {
         swal_clear_text: "¿Deseas limpiar el análisis actual para configurar una nueva consulta?",
         btn_confirm: "Sí, limpiar",
         btn_cancel: "Cancelar",
+        swal_error_title: "Acción Requerida",
+        swal_error_text: "Por favor, carga un archivo NetCDF (.nc) para comenzar el análisis geoespacial.",
+        toast_searching: "Consultando coordenadas...",
+        toast_success: "Análisis de punto listo",
         m_1: "Ene", m_2: "Feb", m_3: "Mar", m_4: "Abr", m_5: "May", m_6: "Jun", 
         m_7: "Jul", m_8: "Ago", m_9: "Sep", m_10: "Oct", m_11: "Nov", m_12: "Dic"
     },
@@ -300,6 +304,10 @@ const translations = {
         swal_clear_text: "Do you want to clear the current analysis to configure a new query?",
         btn_confirm: "Yes, clear",
         btn_cancel: "Cancel",
+        swal_error_title: "Action Required",
+        swal_error_text: "Please upload a NetCDF (.nc) file to start the geospatial analysis.",
+        toast_searching: "Querying coordinates...",
+        toast_success: "Point analysis ready",
         m_1: "Jan", m_2: "Feb", m_3: "Mar", m_4: "Apr", m_5: "May", m_6: "Jun", 
         m_7: "Jul", m_8: "Aug", m_9: "Sep", m_10: "Oct", m_11: "Nov", m_12: "Dec"
     }

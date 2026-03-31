@@ -21,7 +21,110 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
 
     <script>
-        // Init state immediately to prevent flash
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            DEFAULT: '#004423',
+                            container: '#b4f4c7',
+                            'fixed-dim': '#7cda9a'
+                        },
+                        secondary: {
+                            DEFAULT: '#526350',
+                            container: '#d5e8cf'
+                        },
+                        surface: {
+                            DEFAULT: '#fcfdf6',
+                            container: '#f1f1eb',
+                            'container-low': '#f7f6f0',
+                            'container-high': '#ebeae5',
+                            'container-highest': '#e5e4df',
+                            'container-lowest': '#ffffff'
+                        },
+                        'on-surface': '#191c1d',
+                        'on-primary-fixed': '#00210e',
+                        'primary-fixed': '#b4f4c7',
+                        'primary-fixed-dim': '#7cda9a',
+                        'outline-variant': '#c0c9bb',
+                        error: '#ba1a1a'
+                    },
+                    fontFamily: {
+                        headline: ['Manrope', 'sans-serif'],
+                        body: ['Inter', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer components {
+            .glass-panel {
+                @apply bg-white/70 dark:bg-black/40 backdrop-blur-md border border-white/20 dark:border-white/10;
+            }
+            .forest-gradient {
+                @apply bg-gradient-to-br from-[#004423] to-[#006d38] text-white;
+            }
+            .animate-slide-up {
+                animation: slideUp 0.6s ease-out forwards;
+            }
+        }
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        /* Leaflet Fix: Prevent tile fragmentation from global image styles */
+        .leaflet-container img {
+            max-width: none !important;
+            max-height: none !important;
+        }
+        .leaflet-container {
+            border-radius: 1rem;
+        }
+        /* Custom Select Option Styling for Dark Mode Consistency */
+        select option {
+            background-color: white;
+            color: #191c1d;
+        }
+        .dark select option {
+            background-color: #191c1d;
+            color: #f1f1eb;
+        }
+
+        /* Marker Pulse Animation (Sonar Effect) */
+        .pulse-marker {
+            width: 16px;
+            height: 16px;
+            background: #004423;
+            border-radius: 50%;
+            border: 2px solid white;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+            position: relative;
+        }
+        .dark .pulse-marker {
+            background: #7cda9a;
+            border-color: #191c1d;
+        }
+        .pulse-marker::after {
+            content: '';
+            position: absolute;
+            top: -5px; right: -5px; bottom: -5px; left: -5px;
+            border-radius: 50%;
+            border: 4px solid #004423;
+            opacity: 0;
+            animation: pulse-sonar 1.8s infinite ease-out;
+        }
+        .dark .pulse-marker::after {
+            border-color: #7cda9a;
+        }
+        @keyframes pulse-sonar {
+            0% { transform: scale(0.6); opacity: 0; }
+            50% { opacity: 0.6; }
+            100% { transform: scale(3.5); opacity: 0; }
+        }
+    </style>
+    <script>
         if (localStorage.getItem('theme') === 'dark') document.documentElement.classList.add('dark');
     </script>
 

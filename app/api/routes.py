@@ -2,10 +2,11 @@ import os
 import xarray as xr
 import pandas as pd
 from flask import Blueprint, request, jsonify, current_app
-from flask_login import login_required, current_user
+from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.utils import secure_filename
-from ..extensions import db
-from ..models import DatasetHistory
+from werkzeug.security import generate_password_hash, check_password_hash
+from ..extensions import db, limiter
+from ..models import User, DatasetHistory
 from ..utils import allowed_file, procesar_serie
 
 api_bp = Blueprint('api', __name__)
@@ -94,7 +95,7 @@ def consultar_punto():
         current_app.logger.error(f"Error en consultar_punto: {e}")
         return jsonify({'error': 'Error consultando coordenadas en el dataset.'}), 500
 
-@api_bp.route('/api/get_trends/<filename>')
+@api_bp.route('/get_trends/<filename>')
 @login_required
 def get_trends(filename):
     filename = secure_filename(filename)
@@ -161,6 +162,11 @@ def get_trends(filename):
         else:
             rec_text = "Condiciones hídricas normales. Mantener prácticas culturales programadas."
         
+        # New: Get Max Values for UI
+        max_row = df.loc[df['valor'].idxmax()]
+        max_precip = float(max_row['valor'])
+        max_fecha = max_row['fecha'].strftime('%b %Y')
+
         ds.close()
         
         return jsonify({
@@ -173,6 +179,8 @@ def get_trends(filename):
             'anual_values': anual_values,
             'promedio_total': round(promedio_total, 2),
             'anomalia': round(anomalia, 2),
+            'max_precip': round(max_precip, 2),
+            'max_fecha': max_fecha,
             'estabilidad': estabilidad,
             'recomendacion': rec_text
         })
@@ -180,3 +188,50 @@ def get_trends(filename):
         if 'ds' in locals(): ds.close()
         current_app.logger.error(f"Error en tendencias API: {e}")
         return jsonify({'exito': False, 'error': 'Fallo en análisis de tendencias.'}), 500
+
+@api_bp.route('/profile/update', methods=['POST'])
+@login_required
+def update_profile():
+    data = request.json
+    nombre = data.get('nombre')
+    email = data.get('email')
+
+    if email != current_user.email:
+        if User.query.filter_by(email=email).first():
+            return jsonify({'exito': False, 'error': 'El correo ya está en uso'}), 400
+    
+    current_user.nombre = nombre
+    current_user.email = email
+    db.session.commit()
+    return jsonify({'exito': True})
+
+@api_bp.route('/profile/password', methods=['POST'])
+@login_required
+def update_password():
+    data = request.json
+    current_pass = data.get('current_password')
+    new_pass = data.get('new_password')
+
+    if not check_password_hash(current_user.password, current_pass):
+        return jsonify({'exito': False, 'error': 'La contraseña actual es incorrecta'}), 400
+
+    current_user.password = generate_password_hash(new_pass, method='pbkdf2:sha256')
+    db.session.commit()
+    return jsonify({'exito': True})
+
+@api_bp.route('/profile/2fa', methods=['POST'])
+@login_required
+def toggle_2fa():
+    current_user.two_factor_enabled = not current_user.two_factor_enabled
+    db.session.commit()
+    return jsonify({'exito': True, 'two_factor_enabled': current_user.two_factor_enabled})
+
+@api_bp.route('/profile/delete', methods=['DELETE'])
+@login_required
+def delete_account():
+    user = User.query.get(current_user.id)
+    DatasetHistory.query.filter_by(user_id=user.id).delete()
+    db.session.delete(user)
+    db.session.commit()
+    logout_user()
+    return jsonify({'exito': True})
