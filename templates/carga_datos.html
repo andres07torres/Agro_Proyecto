@@ -25,26 +25,26 @@
                 </button>
             </div>
             <nav class="space-y-1">
-                <a class="group flex items-center space-x-3 py-4 px-6 text-secondary dark:text-secondary/70 opacity-80 hover:bg-[#edeeef] dark:hover:bg-white/5 hover:opacity-100 transition-all cursor-pointer active:scale-95 duration-150" href="{{ url_for('dashboard') }}">
+                <a class="group flex items-center space-x-3 py-4 px-6 text-secondary dark:text-secondary/70 opacity-80 hover:bg-[#edeeef] dark:hover:bg-white/5 hover:opacity-100 transition-all cursor-pointer active:scale-95 duration-150" href="{{ url_for('site.dashboard') }}">
                     <span class="material-symbols-outlined">map</span>
                     <span data-i18n="sidebar_explorer">Explorador</span>
                 </a>
-                <a class="group flex items-center space-x-3 py-4 px-6 text-secondary dark:text-secondary/70 opacity-80 hover:bg-[#edeeef] dark:hover:bg-white/5 hover:opacity-100 transition-all cursor-pointer active:scale-95 duration-150" href="{{ url_for('tendencias') }}">
+                <a class="group flex items-center space-x-3 py-4 px-6 text-secondary dark:text-secondary/70 opacity-80 hover:bg-[#edeeef] dark:hover:bg-white/5 hover:opacity-100 transition-all cursor-pointer active:scale-95 duration-150" href="{{ url_for('site.tendencias') }}">
                     <span class="material-symbols-outlined">trending_up</span>
                     <span data-i18n="sidebar_trends">Tendencias</span>
                 </a>
-                <a class="group flex items-center space-x-3 py-4 px-6 text-primary dark:text-primary-fixed border-r-4 border-primary dark:border-primary-fixed bg-[#edeeef] dark:bg-white/5 transition-all cursor-pointer active:scale-95 duration-150" href="{{ url_for('carga_datos') }}">
+                <a class="group flex items-center space-x-3 py-4 px-6 text-primary dark:text-primary-fixed border-r-4 border-primary dark:border-primary-fixed bg-[#edeeef] dark:bg-white/5 transition-all cursor-pointer active:scale-95 duration-150" href="{{ url_for('site.carga_datos') }}">
                     <span class="material-symbols-outlined">cloud_upload</span>
                     <span data-i18n="sidebar_upload">Carga de Datos</span>
                 </a>
-                <a class="group flex items-center space-x-3 py-4 px-6 text-secondary dark:text-secondary/70 opacity-80 hover:bg-[#edeeef] dark:hover:bg-white/5 hover:opacity-100 transition-all cursor-pointer active:scale-95 duration-150" href="{{ url_for('configuracion') }}">
+                <a class="group flex items-center space-x-3 py-4 px-6 text-secondary dark:text-secondary/70 opacity-80 hover:bg-[#edeeef] dark:hover:bg-white/5 hover:opacity-100 transition-all cursor-pointer active:scale-95 duration-150" href="{{ url_for('site.configuracion') }}">
                     <span class="material-symbols-outlined">settings</span>
                     <span data-i18n="sidebar_config">Configuración</span>
                 </a>
             </nav>
         </div>
         <div class="mt-auto p-8 border-t border-[#edeeef]/15 dark:border-white/5">
-            <a class="group flex items-center space-x-3 py-4 px-6 text-error opacity-80 hover:bg-error/10 hover:opacity-100 transition-all cursor-pointer active:scale-95 duration-150" href="{{ url_for('logout') }}">
+            <a class="group flex items-center space-x-3 py-4 px-6 text-error opacity-80 hover:bg-error/10 hover:opacity-100 transition-all cursor-pointer active:scale-95 duration-150" href="{{ url_for('auth.logout') }}">
                 <span class="material-symbols-outlined">logout</span>
                 <span data-i18n="nav_logout">Cerrar Sesión</span>
             </a>
@@ -74,8 +74,8 @@
                         <p class="text-xs font-black font-headline text-on-surface dark:text-white line-clamp-1">{{ current_user.nombre }}</p>
                         <p class="text-[10px] text-secondary/60 dark:text-secondary/40 uppercase tracking-widest font-bold">{{ current_user.rol }}</p>
                     </div>
-                    <div class="w-10 h-10 rounded-xl bg-[#b4f4c7] text-[#00210e] flex items-center justify-center font-bold text-sm shadow-sm shrink-0">
-                        {{ current_user.nombre[:2] | upper }}
+                    <div class="w-10 h-10 rounded-xl bg-[#b4f4c7] text-[#00210e] flex items-center justify-center font-bold text-sm shadow-sm shrink-0 notranslate" translate="no">
+                        {{ current_user.nombre[:1] | upper }}&#8203;{{ current_user.nombre[1:2] | upper }}
                     </div>
                 </div>
 
@@ -104,10 +104,10 @@
                         <table class="w-full text-left min-w-[600px]">
                             <thead class="bg-surface-container-low dark:bg-white/5 border-b border-outline-variant/10 dark:border-white/10 text-[10px] uppercase font-black text-secondary dark:text-secondary/70 tracking-widest">
                                 <tr>
-                                    <th class="px-8 py-5">Archivo</th>
-                                    <th class="px-8 py-5">Fecha</th>
-                                    <th class="px-8 py-5">Tamaño</th>
-                                    <th class="px-8 py-5">Estado</th>
+                                    <th class="px-8 py-5" data-i18n="th_file">Archivo</th>
+                                    <th class="px-8 py-5" data-i18n="th_date">Fecha</th>
+                                    <th class="px-8 py-5" data-i18n="th_size">Tamaño</th>
+                                    <th class="px-8 py-5" data-i18n="th_status">Estado</th>
                                 </tr>
                             </thead>
                             <tbody id="tablaHistorial" class="text-sm font-medium divide-y divide-outline-variant/5 dark:divide-white/5 text-on-surface dark:text-on-surface-variant">
@@ -118,13 +118,13 @@
                                         <td class="px-8 py-5 text-xs dark:text-secondary/70">{{ record.fecha.strftime('%d %b %Y') }}</td>
                                         <td class="px-8 py-5 text-xs text-secondary dark:text-secondary/70">{{ "%.2f"|format(record.size_mb) }} MB</td>
                                         <td class="px-8 py-5">
-                                            <span class="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-[10px] font-black px-3 py-1 rounded-full border border-green-200 dark:border-green-800/50 uppercase tracking-tighter">{{ record.estado }}</span>
+                                            <span class="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-[10px] font-black px-3 py-1 rounded-full border border-green-200 dark:border-green-800/50 uppercase tracking-tighter" {% if record.estado|upper == 'LISTO' %}data-i18n="btn_ready"{% endif %}>{{ record.estado }}</span>
                                         </td>
                                     </tr>
                                     {% endfor %}
                                 {% else %}
                                     <tr id="emptyHistoryRow">
-                                         <td colspan="4" class="px-8 py-5 text-center text-xs text-secondary/50 italic">Aún no has procesado archivos hoy.</td>
+                                         <td colspan="4" class="px-8 py-5 text-center text-xs text-secondary/50 italic" data-i18n="no_files_today">Aún no has procesado archivos hoy.</td>
                                     </tr>
                                 {% endif %}
                             </tbody>
@@ -136,14 +136,8 @@
     </main>
 </div>
 
-<script>
-    function toggleSidebar() {
-        const sidebar = document.getElementById('mainSidebar');
-        const backdrop = document.getElementById('sidebarBackdrop');
-        sidebar.classList.toggle('-translate-x-full');
-        backdrop.classList.toggle('hidden');
-    }
+{% block body_scripts %}
+<!-- No page-specific scripts needed yet, toggleSidebar is in app.js -->
+{% endblock %}
 
-
-</script>
 {% endblock %}

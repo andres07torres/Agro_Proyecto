@@ -25,26 +25,26 @@
                 </button>
             </div>
             <nav class="space-y-1">
-                <a class="group flex items-center space-x-3 py-4 px-6 text-secondary dark:text-secondary/70 opacity-80 hover:bg-[#edeeef] dark:hover:bg-white/5 hover:opacity-100 transition-all cursor-pointer active:scale-95 duration-150" href="{{ url_for('dashboard') }}">
+                <a class="group flex items-center space-x-3 py-4 px-6 text-secondary dark:text-secondary/70 opacity-80 hover:bg-[#edeeef] dark:hover:bg-white/5 hover:opacity-100 transition-all cursor-pointer active:scale-95 duration-150" href="{{ url_for('site.dashboard') }}">
                     <span class="material-symbols-outlined">map</span>
                     <span data-i18n="sidebar_explorer">Explorador</span>
                 </a>
-                <a class="group flex items-center space-x-3 py-4 px-6 text-secondary dark:text-secondary/70 opacity-80 hover:bg-[#edeeef] dark:hover:bg-white/5 hover:opacity-100 transition-all cursor-pointer active:scale-95 duration-150" href="{{ url_for('tendencias') }}">
+                <a class="group flex items-center space-x-3 py-4 px-6 text-secondary dark:text-secondary/70 opacity-80 hover:bg-[#edeeef] dark:hover:bg-white/5 hover:opacity-100 transition-all cursor-pointer active:scale-95 duration-150" href="{{ url_for('site.tendencias') }}">
                     <span class="material-symbols-outlined">trending_up</span>
                     <span data-i18n="sidebar_trends">Tendencias</span>
                 </a>
-                <a class="group flex items-center space-x-3 py-4 px-6 text-secondary dark:text-secondary/70 opacity-80 hover:bg-[#edeeef] dark:hover:bg-white/5 hover:opacity-100 transition-all cursor-pointer active:scale-95 duration-150" href="{{ url_for('carga_datos') }}">
+                <a class="group flex items-center space-x-3 py-4 px-6 text-secondary dark:text-secondary/70 opacity-80 hover:bg-[#edeeef] dark:hover:bg-white/5 hover:opacity-100 transition-all cursor-pointer active:scale-95 duration-150" href="{{ url_for('site.carga_datos') }}">
                     <span class="material-symbols-outlined">cloud_upload</span>
                     <span data-i18n="sidebar_upload">Carga de Datos</span>
                 </a>
-                <a class="group flex items-center space-x-3 py-4 px-6 text-primary dark:text-primary-fixed border-r-4 border-primary dark:border-primary-fixed bg-[#edeeef] dark:bg-white/5 transition-all cursor-pointer active:scale-95 duration-150" href="{{ url_for('configuracion') }}">
+                <a class="group flex items-center space-x-3 py-4 px-6 text-primary dark:text-primary-fixed border-r-4 border-primary dark:border-primary-fixed bg-[#edeeef] dark:bg-white/5 transition-all cursor-pointer active:scale-95 duration-150" href="{{ url_for('site.configuracion') }}">
                     <span class="material-symbols-outlined">settings</span>
                     <span data-i18n="sidebar_config">Configuración</span>
                 </a>
             </nav>
         </div>
         <div class="mt-auto p-8 border-t border-[#edeeef]/15 dark:border-white/5">
-            <a class="group flex items-center space-x-3 py-4 px-6 text-error opacity-80 hover:bg-error/10 hover:opacity-100 transition-all cursor-pointer active:scale-95 duration-150" href="{{ url_for('logout') }}">
+            <a class="group flex items-center space-x-3 py-4 px-6 text-error opacity-80 hover:bg-error/10 hover:opacity-100 transition-all cursor-pointer active:scale-95 duration-150" href="{{ url_for('auth.logout') }}">
                 <span class="material-symbols-outlined">logout</span>
                 <span data-i18n="nav_logout">Cerrar Sesión</span>
             </a>
@@ -74,8 +74,8 @@
                         <p class="text-xs font-black font-headline text-on-surface dark:text-white line-clamp-1">{{ current_user.nombre }}</p>
                         <p class="text-[10px] text-secondary/60 dark:text-secondary/40 uppercase tracking-widest font-bold">{{ current_user.rol }}</p>
                     </div>
-                    <div class="w-10 h-10 rounded-xl bg-[#b4f4c7] text-[#00210e] flex items-center justify-center font-bold text-sm shadow-sm shrink-0">
-                        {{ current_user.nombre[:2] | upper }}
+                    <div class="w-10 h-10 rounded-xl bg-[#b4f4c7] text-[#00210e] flex items-center justify-center font-bold text-sm shadow-sm shrink-0 notranslate" translate="no">
+                        {{ current_user.nombre[:1] | upper }}&#8203;{{ current_user.nombre[1:2] | upper }}
                     </div>
                 </div>
 
@@ -188,125 +188,8 @@
     </main>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script>
-    function toggleSidebar() {
-        const sidebar = document.getElementById('mainSidebar');
-        const backdrop = document.getElementById('sidebarBackdrop');
-        sidebar.classList.toggle('-translate-x-full');
-        backdrop.classList.toggle('hidden');
-    }
+{% block body_scripts %}
+<script src="{{ url_for('static', filename='js/settings.js') }}"></script>
+{% endblock %}
 
-    async function guardarPerfil() {
-        const btn = document.getElementById('btnSaveProfile');
-        const originalText = btn.innerHTML;
-        btn.innerHTML = '<span class="material-symbols-outlined animate-spin text-sm mr-2">progress_activity</span> Guardando...';
-        btn.disabled = true;
-
-        try {
-            const res = await fetch('/api/profile/update', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content
-                },
-                body: JSON.stringify({
-                    nombre: document.getElementById('inNombre').value,
-                    email: document.getElementById('inEmail').value
-                })
-            });
-            const data = await res.json();
-            if(!data.exito) throw new Error(data.error);
-            Swal.fire("Éxito", "Perfil actualizado correctamente.", "success");
-        } catch (e) {
-            Swal.fire("Error", "Fallo al actualizar el perfil: " + (e.message || "Error desconocido"), "error");
-        } finally {
-            btn.innerHTML = originalText;
-            btn.disabled = false;
-        }
-    }
-
-    async function guardarPassword() {
-        const currentPass = document.getElementById('currentPass').value;
-        const newPass = document.getElementById('newPass').value;
-        if (!currentPass || !newPass) return Swal.fire("Aviso", "Por favor complete ambos campos.", "warning");
-        if (newPass.length < 8) return Swal.fire("Seguridad", "La contraseña debe tener al menos 8 caracteres.", "info");
-        
-        const btn = document.getElementById('btnSavePass');
-        btn.innerText = "Verificando...";
-        btn.disabled = true;
-
-        try {
-            const res = await fetch('/api/profile/password', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content
-                },
-                body: JSON.stringify({ current_password: currentPass, new_password: newPass })
-            });
-            const data = await res.json();
-            if(!data.exito) throw new Error(data.error);
-            Swal.fire("¡Actualizada!", "Su sesión ahora está más segura.", "success");
-            if(window.addNotification) window.addNotification("Has cambiado tu contraseña.");
-            document.getElementById('currentPass').value = '';
-            document.getElementById('newPass').value = '';
-            document.getElementById('passForm').classList.add('hidden');
-        } catch (e) {
-            Swal.fire("Operación denegada", (e.message || "Contraseña actual incorrecta"), "error");
-        } finally {
-            btn.innerText = "Guardar";
-            btn.disabled = false;
-        }
-    }
-
-    async function toggle2FA() {
-        const btn = document.getElementById('btn2FA');
-        btn.classList.add('opacity-50', 'pointer-events-none');
-        try {
-            const res = await fetch('/api/profile/2fa', { 
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content
-                }
-            });
-            const data = await res.json();
-            if(!data.exito) throw new Error("API call failed");
-            window.location.reload(); 
-        } catch(e) {
-            Swal.fire("Error", "Fallo al alterar Autenticación de Dos Pasos.", "error");
-            btn.classList.remove('opacity-50', 'pointer-events-none');
-        }
-    }
-
-    async function eliminarCuenta() {
-        const confirmacion = await Swal.fire({
-            title: '¿Estás completamente seguro?',
-            text: "Se perderá todo el historial de datos cargados y no podrás iniciar sesión con este correo nuevamente.",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#d33',
-            cancelButtonColor: '#3085d6',
-            confirmButtonText: 'Sí, eliminar cuenta',
-            cancelButtonText: 'Cancelar'
-        });
-
-        if (!confirmacion.isConfirmed) return;
-        
-        try {
-            const res = await fetch('/api/profile/delete', { 
-                method: 'DELETE',
-                headers: {
-                    'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content
-                }
-            });
-            const data = await res.json();
-            if(data.exito) {
-                window.location.href = "/inicio";
-            }
-        } catch(e) {
-            Swal.fire("Error Crítico", "Ha ocurrido un error intentando remover los datos persistentes del usuario.", "error");
-        }
-    }
-</script>
 {% endblock %}

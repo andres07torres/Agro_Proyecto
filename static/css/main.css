@@ -1,0 +1,56 @@
+/* AGRO VISOR - GLOBAL STYLES */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+    --primary: #004423;
+    --on-primary: #ffffff;
+    --primary-container: #b4f4c7;
+    --secondary: #526350;
+    --error: #ba1a1a;
+    --background: #fcfdf6;
+    --surface: #fcfdf6;
+    --outline: #717a6d;
+}
+
+.dark {
+    --primary: #7cda9a;
+    --on-primary: #00391c;
+    --primary-container: #00522a;
+    --secondary: #b9ccb4;
+    --error: #ffb4ab;
+    --background: #191c1d;
+    --surface: #191c1d;
+    --outline: #8b9386;
+}
+
+/* Custom Scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(151, 151, 151, 0.2);
+    border-radius: 10px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(151, 151, 151, 0.4);
+}
+
+/* Glassmorphism effects */
+.glass-panel {
+    @apply bg-white/70 dark:bg-black/40 backdrop-blur-md border border-white/20 dark:border-white/10;
+}
+
+/* Animations */
+@keyframes slideUp {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.animate-slide-up {
+    animation: slideUp 0.6s ease-out forwards;
+}

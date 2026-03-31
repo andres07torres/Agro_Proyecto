@@ -1,0 +1,336 @@
+/**
+ * AGRO VISOR - DASHBOARD LOGIC
+ * Manages Leaflet map, NetCDF data visualization, and interactive charts.
+ */
+
+function toggleSidebar() {
+    const sidebar = document.getElementById('mainSidebar');
+    const backdrop = document.getElementById('sidebarBackdrop');
+    sidebar.classList.toggle('-translate-x-full');
+    backdrop.classList.toggle('hidden');
+}
+
+// --- MAPA ---
+let map;
+let lightTiles;
+let darkTiles;
+let capaActual = null;
+let marcadorClick = null;
+let chartInstancia = null;
+let nombreArchivoNetCDF = null;
+let datosGlobales = [];
+
+function initMap() {
+    map = L.map('map', { zoomControl: false }).setView([-1.8312, -78.1834], 7);
+    
+    // TILE LAYERS
+    lightTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 });
+    darkTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 });
+
+    // Init Tile
+    const initialTheme = localStorage.getItem('theme') || 'light';
+    if (initialTheme === 'dark') darkTiles.addTo(map);
+    else lightTiles.addTo(map);
+
+    map.on('click', function (e) {
+        if (!nombreArchivoNetCDF) return;
+        if (marcadorClick) map.removeLayer(marcadorClick);
+        marcadorClick = L.marker(e.latlng).addTo(map);
+        consultarPunto(e.latlng.lat, e.latlng.lng);
+    });
+}
+
+function updateMapLayer(isDark) {
+    if (!map) return;
+    if (isDark) {
+        map.removeLayer(lightTiles);
+        darkTiles.addTo(map);
+    } else {
+        map.removeLayer(darkTiles);
+        lightTiles.addTo(map);
+    }
+}
+
+// --- FUNCIONES LOGICAS ---
+function cargarShapefile() {
+    var file = document.getElementById('archivoShapefile').files[0];
+    if (!file) return;
+    document.getElementById('loader').classList.remove('hidden');
+
+    var reader = new FileReader();
+    reader.onload = function (e) {
+        shp(e.target.result).then(function (geojson) {
+            if (capaActual) map.removeLayer(capaActual);
+            capaActual = L.geoJSON(geojson, { 
+                style: { color: '#004423', weight: 2, fillOpacity: 0.1 } 
+            }).addTo(map);
+            map.fitBounds(capaActual.getBounds());
+            document.getElementById('loader').classList.add('hidden');
+        });
+    };
+    reader.readAsArrayBuffer(file);
+}
+
+function buscarModulo(event) {
+    if (event.key === 'Enter') {
+        const term = event.target.value.toLowerCase().trim();
+        if (!term) return;
+
+        // Note: These URLs are hardcoded for now, but in a real app 
+        // you might want to pass them from the template or use a global config
+        if (term.includes('explo') || term.includes('mapa') || term.includes('visor')) {
+            window.location.href = "/dashboard";
+        } else if (term.includes('tendencia') || term.includes('analisis') || term.includes('histor')) {
+            window.location.href = "/tendencias";
+        } else if (term.includes('carga') || term.includes('dato') || term.includes('subir')) {
+            window.location.href = "/carga_datos";
+        } else if (term.includes('config') || term.includes('perfil') || term.includes('ajuste') || term.includes('seguridad')) {
+            window.location.href = "/configuracion";
+        } else {
+            const isDark = document.documentElement.classList.contains('dark');
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    title: "Módulo no encontrado", 
+                    text: 'No hay resultados para: "' + term + '"', 
+                    icon: "info",
+                    background: isDark ? '#191c1d' : '#fff',
+                    color: isDark ? '#fff' : '#000',
+                    customClass: { popup: 'rounded-3xl border border-outline-variant/10' }
+                });
+            } else {
+                alert('No hay resultados para: "' + term + '"');
+            }
+        }
+    }
+}
+
+async function subirNetCDF() {
+    var fileInput = document.getElementById('archivoNetCDF');
+    var file = fileInput.files[0];
+    if (!file) return;
+
+    actualizarUIUpload('loading');
+
+    var formData = new FormData();
+    formData.append('archivo_nc', file);
+    ejecutarConsulta('/api/procesar_netcdf', formData, true);
+    
+    fileInput.value = '';
+}
+
+function actualizarUIUpload(estado, nombre = "") {
+    const btn = document.getElementById('btnCargarDatos');
+    const icon = document.getElementById('iconData');
+    const text = document.getElementById('btnDataText');
+    const status = document.getElementById('uploadStatus');
+
+    const lang = document.documentElement.lang || 'es';
+    if (estado === 'loading') {
+        btn.classList.add('opacity-50', 'pointer-events-none');
+        status.classList.remove('hidden');
+        text.innerText = translations[lang]['btn_loading'] || "Procesando...";
+    } else if (estado === 'success') {
+        btn.classList.remove('opacity-50', 'pointer-events-none', 'bg-primary');
+        btn.classList.add('bg-green-600');
+        status.classList.add('hidden');
+        icon.innerText = "check_circle";
+        text.innerText = (translations[lang]['btn_ready'] || "¡Listo!") + " " + nombre;
+    } else if (estado === 'error') {
+        btn.classList.remove('opacity-50', 'pointer-events-none', 'bg-green-600');
+        btn.classList.add('bg-error');
+        status.classList.add('hidden');
+        icon.innerText = "error";
+        text.innerText = nombre ? "Error: " + nombre : "Error - Reintentar";
+    }
+}
+
+async function consultarPunto(lat, lon) {
+    localStorage.setItem('active_lat', lat);
+    localStorage.setItem('active_lon', lon);
+    var payload = { filename: nombreArchivoNetCDF, lat: lat, lon: lon };
+    ejecutarConsulta('/api/consultar_punto', JSON.stringify(payload), false);
+}
+
+async function ejecutarConsulta(url, bodyData, esUpload) {
+    document.getElementById('loader').classList.remove('hidden');
+    try {
+        const options = { 
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content
+            }
+        };
+        if (esUpload) options.body = bodyData;
+        else { 
+            options.headers['Content-Type'] = 'application/json'; 
+            options.body = bodyData; 
+        }
+
+        const response = await fetch(url, options);
+        const data = await response.json();
+        if (!data.exito) throw new Error(data.error);
+
+        if (data.filename) {
+            nombreArchivoNetCDF = data.filename;
+            localStorage.setItem('active_netcdf_file', data.filename);
+            localStorage.removeItem('active_lat');
+            localStorage.removeItem('active_lon');
+            actualizarUIUpload('success', data.filename);
+            document.getElementById('activeFiles').innerHTML = `
+                <div class="bg-white dark:bg-white/5 p-3 rounded-lg flex items-center space-x-2 border border-primary/10 dark:border-white/10">
+                    <span class="material-symbols-outlined text-primary dark:text-primary-fixed text-sm" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                    <p class="text-[10px] font-black truncate text-on-surface dark:text-white/80">${data.filename}</p>
+                </div>
+            `;
+        }
+        
+        datosGlobales = data.datos;
+        document.getElementById('resultIndicator').classList.remove('hidden');
+        document.getElementById('indicatorCoords').innerText = data.coords || "Resumen Regional";
+
+        llenarComboAnios(datosGlobales);
+        aplicarFiltro();
+        document.getElementById('statsSection').classList.remove('hidden');
+        document.getElementById('emptyStats').classList.add('hidden');
+
+    } catch (error) {
+        console.error("Error al procesar:", error);
+        actualizarUIUpload('error', error.message);
+        document.getElementById('statsSection').classList.add('hidden');
+        document.getElementById('emptyStats').classList.remove('hidden');
+    } finally {
+        document.getElementById('loader').classList.add('hidden');
+    }
+}
+
+function llenarComboAnios(datos) {
+    const select = document.getElementById('filtroAnio');
+    if (!select) return;
+    select.innerHTML = '<option value="todos" data-i18n="opt_all">Histórico Completo</option>';
+    const anios = new Set();
+    datos.forEach(d => { if (d.fecha && d.fecha.length >= 4) anios.add(d.fecha.substring(0, 4)); });
+    Array.from(anios).sort().forEach(anio => {
+        if (!isNaN(anio)) {
+            const opt = document.createElement('option');
+            opt.value = anio; opt.innerText = "Año " + anio; select.appendChild(opt);
+        }
+    });
+}
+
+function aplicarFiltro() {
+    const anio = document.getElementById('filtroAnio').value;
+    const datos = (anio === "todos") ? datosGlobales : datosGlobales.filter(d => d.fecha.startsWith(anio));
+    
+    const labels = datos.map(d => d.fecha);
+    const values = datos.map(d => d.valor);
+    renderizar(labels, values);
+}
+
+function renderizar(labels, values) {
+    const canvas = document.getElementById('graficoPrecipitacion');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (chartInstancia) chartInstancia.destroy();
+
+    const filtroAnio = document.getElementById('filtroAnio').value;
+    const nombresMeses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+    
+    const promediosMensuales = {};
+    const conteoMensual = {};
+
+    labels.forEach((label, i) => {
+        const fecha = new Date(label);
+        if (isNaN(fecha)) return;
+        const anioLabel = fecha.getFullYear().toString();
+        
+        if (filtroAnio !== 'todos' && anioLabel !== filtroAnio) return;
+
+        const mesIdx = fecha.getMonth();
+        const mesNombre = nombresMeses[mesIdx];
+        
+        if (!promediosMensuales[mesNombre]) {
+            promediosMensuales[mesNombre] = 0;
+            conteoMensual[mesNombre] = 0;
+        }
+        promediosMensuales[mesNombre] += values[i];
+        conteoMensual[mesNombre] += 1;
+    });
+
+    const labelsFinal = nombresMeses;
+    const valuesFinal = nombresMeses.map(m => (promediosMensuales[m] / (conteoMensual[m] || 1)).toFixed(2));
+
+    // UI Labels
+    document.getElementById('chartLabel').innerText = filtroAnio === 'todos' ? "Promedio Mensual Histórico (mm)" : `Ciclo Mensual ${filtroAnio} (mm)`;
+    
+    if (valuesFinal.length > 0) {
+        document.getElementById('indicatorValue').innerText = valuesFinal[valuesFinal.length - 1] + " mm";
+        document.getElementById('reliabilityValue').innerText = "98.2%";
+    }
+
+    const isDark = document.documentElement.classList.contains('dark');
+    const primaryColor = isDark ? '#7cda9a' : '#004423';
+    const textColor = isDark ? '#c0c9bb' : '#717a6d';
+
+    chartInstancia = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labelsFinal,
+            datasets: [{
+                label: 'Precipitación (mm)',
+                data: valuesFinal,
+                backgroundColor: primaryColor,
+                borderRadius: 8,
+                hoverBackgroundColor: isDark ? '#97f7b5' : '#006d38',
+                barThickness: 'flex',
+                maxBarThickness: 35
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: isDark ? 'rgba(0,0,0,0.8)' : 'rgba(25, 28, 29, 0.9)',
+                    padding: 12,
+                    cornerRadius: 8,
+                    titleFont: { family: 'Roboto', size: 12 },
+                    bodyFont: { family: 'Inter', size: 12 }
+                }
+            },
+            scales: {
+                x: {
+                    grid: { display: false },
+                    ticks: { font: { family: 'Inter', size: 10 }, color: textColor }
+                },
+                y: {
+                    beginAtZero: true,
+                    grid: { color: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)', drawBorder: false },
+                    ticks: { font: { family: 'Inter', size: 10 }, color: textColor }
+                }
+            },
+            animation: { duration: 800, easing: 'easeOutQuart' }
+        }
+    });
+}
+
+function actualizarNombreMascara() {
+    const input = document.getElementById('archivoShapefile');
+    const display = document.getElementById('nombreMascara');
+    const btn = document.getElementById('btnGenerarMascara');
+    if (input.files.length > 0) {
+        display.innerText = "Archivo: " + input.files[0].name;
+        display.classList.remove('hidden');
+        btn.classList.remove('hidden');
+    } else {
+        display.classList.add('hidden');
+        btn.classList.add('hidden');
+    }
+}
+
+// Initialize on load
+document.addEventListener('DOMContentLoaded', () => {
+    initMap();
+    // Re-check theme on map
+    updateMapLayer(document.documentElement.classList.contains('dark'));
+});

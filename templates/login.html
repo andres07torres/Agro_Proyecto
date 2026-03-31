@@ -33,7 +33,7 @@
                   {% endif %}
                 {% endwith %}
 
-                <form method="POST" action="{{ url_for('login') }}" class="space-y-6">
+                <form method="POST" action="{{ url_for('auth.login') }}" class="space-y-6">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <div>
                         <label for="email" class="block text-xs font-black text-secondary dark:text-secondary/70 uppercase tracking-widest mb-2 pl-1" data-i18n="email_label">Correo Electrónico</label>
@@ -72,7 +72,7 @@
                 <div class="mt-10 text-center">
                     <p class="text-xs text-secondary dark:text-secondary/70 font-medium">
                         <span data-i18n="no_account">¿No tienes una cuenta?</span>
-                        <a href="{{ url_for('register') }}" class="text-primary dark:text-primary-fixed font-black hover:underline underline-offset-4 ml-1" data-i18n="register_link">Regístrate gratis</a>
+                        <a href="{{ url_for('auth.register') }}" class="text-primary dark:text-primary-fixed font-black hover:underline underline-offset-4 ml-1" data-i18n="register_link">Regístrate gratis</a>
                     </p>
                 </div>
             </div>
