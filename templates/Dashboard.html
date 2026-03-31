@@ -107,10 +107,9 @@
                     <span class="material-symbols-outlined" translate="no">menu_open</span>
                 </button>
                 <h2 class="font-headline tracking-tight font-bold text-base lg:text-xl text-primary dark:text-primary-fixed truncate max-w-[140px] lg:max-w-none" data-i18n="dash_header_title">Visor Geográfico</h2>
-                <div class="hidden sm:flex bg-surface-container dark:bg-white/5 rounded-full px-4 py-1.5 items-center space-x-2 w-48 lg:w-80 shadow-inner">
-                    <span class="material-symbols-outlined text-outline text-sm" translate="no">search</span>
-                    <input id="globalSearch" onkeyup="buscarModulo(event)" class="bg-transparent border-none focus:ring-0 text-sm w-full font-body placeholder-outline dark:text-white" data-i18n="search_placeholder" placeholder="Buscar..." type="text"/>
-                </div>
+                
+                <!-- Intelligent Search for Dashboard -->
+                {% include 'includes/search_bar.html' %}
             </div>
             <div class="flex items-center space-x-3 lg:space-x-4">
                 <button onclick="showNotifications()" class="relative hidden lg:flex p-2 rounded-full hover:bg-surface-container dark:hover:bg-white/10 transition-all cursor-pointer active:scale-95">
@@ -122,8 +121,8 @@
                 <!-- Profile Section (Matches Screenshot) -->
                 <div class="flex items-center space-x-3">
                     <div class="hidden sm:block text-right">
-                        <p class="text-xs font-black font-headline text-on-surface dark:text-white line-clamp-1" translate="no">{{ current_user.nombre }}</p>
-                        <p class="text-[10px] text-secondary/60 dark:text-secondary/40 uppercase tracking-widest font-bold" translate="no">{{ current_user.rol }}</p>
+                        <p class="text-xs font-black font-headline text-on-surface dark:text-white line-clamp-1" data-i18n="prof_{{ 'admin_name' if current_user.rol|lower == 'administrador' else 'user_name' }}">{{ current_user.nombre }}</p>
+                        <p class="text-[10px] text-secondary/60 dark:text-secondary/40 uppercase tracking-widest font-bold" data-i18n="prof_{{ 'admin' if current_user.rol|lower == 'administrador' else 'user' }}">{{ current_user.rol }}</p>
                     </div>
                     <div class="w-10 h-10 rounded-xl bg-[#b4f4c7] text-[#00210e] flex items-center justify-center font-bold text-sm shadow-sm shrink-0 notranslate" translate="no">
                         {{ current_user.nombre[:1] | upper }}&#8203;{{ current_user.nombre[1:2] | upper }}

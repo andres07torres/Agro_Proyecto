@@ -92,6 +92,13 @@ function cargarShapefile() {
             }).addTo(map);
             map.fitBounds(capaActual.getBounds());
             document.getElementById('loader').classList.add('hidden');
+            
+            // Add notification for mask
+            if (window.addNotification) {
+                const lang = document.documentElement.lang || 'es';
+                const msg = translations[lang]['notif_upload_mask'] || "Máscara geográfica aplicada";
+                window.addNotification(msg);
+            }
         });
     };
     reader.readAsArrayBuffer(file);
@@ -208,6 +215,13 @@ async function ejecutarConsulta(url, bodyData, esUpload) {
                     <p class="text-[10px] font-black truncate text-on-surface dark:text-white/80">${data.filename}</p>
                 </div>
             `;
+
+            // Add notification for file
+            if (window.addNotification) {
+                const lang = document.documentElement.lang || 'es';
+                const msg = (translations[lang]['notif_upload_nc'] || "Archivo procesado") + ": " + data.filename;
+                window.addNotification(msg);
+            }
         } else if (!esUpload) {
             // Show Success Toast for map clicks
             const lang = document.documentElement.lang || 'es';

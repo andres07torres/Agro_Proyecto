@@ -1,0 +1,11 @@
+<!-- Intelligent Global Search Snippet -->
+<div class="hidden sm:flex relative items-center flex-1 max-w-sm ml-4 lg:ml-6 group">
+    <div class="w-full h-9 lg:h-10 bg-surface-container dark:bg-white/5 rounded-full px-4 flex items-center gap-2 border border-outline-variant/10 dark:border-white/5 focus-within:border-primary/30 dark:focus-within:border-primary-fixed/30 focus-within:ring-4 focus-within:ring-primary/5 transition-all shadow-sm">
+        <span class="material-symbols-outlined text-outline dark:text-secondary/70 text-sm" translate="no">search</span>
+        <input id="globalSearch" type="text" class="bg-transparent border-none focus:ring-0 text-[11px] w-full font-body placeholder-secondary/50 dark:text-white" data-i18n="search_placeholder" placeholder="Buscar..." autocomplete="off">
+    </div>
+    <!-- Suggestions Dropdown -->
+    <div id="searchSuggestions" class="absolute top-11 lg:top-12 left-0 w-full bg-white dark:bg-[#1b1b1b] rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] border border-outline-variant/10 dark:border-white/10 overflow-hidden z-[100] hidden">
+        <!-- Populated via static/js/search.js -->
+    </div>
+</div>

@@ -144,6 +144,11 @@
                     </div>
                     <span class="text-xl font-black tracking-tighter text-on-surface dark:text-white font-headline uppercase">Agro Visor</span>
                 </a>
+
+                <!-- Global Intelligent Search -->
+                {% if current_user.is_authenticated %}
+                {% include 'includes/search_bar.html' %}
+                {% endif %}
                 
                 <div class="hidden md:flex items-center gap-6 ml-4">
                     {% if current_user.is_authenticated %}
@@ -176,8 +181,8 @@
                 {% if current_user.is_authenticated %}
                 <div class="flex items-center space-x-3">
                 <div class="hidden sm:block text-right">
-                    <p class="text-xs font-black font-headline text-on-surface dark:text-white line-clamp-1" translate="no">{{ current_user.nombre }}</p>
-                    <p class="text-[10px] text-secondary/60 dark:text-secondary/40 uppercase tracking-widest font-bold" translate="no">{{ current_user.rol }}</p>
+                    <p class="text-xs font-black font-headline text-on-surface dark:text-white line-clamp-1" data-i18n="prof_{{ 'admin_name' if current_user.rol|lower == 'administrador' else 'user_name' }}">{{ current_user.nombre }}</p>
+                    <p class="text-[10px] text-secondary/60 dark:text-secondary/40 uppercase tracking-widest font-bold" data-i18n="prof_{{ 'admin' if current_user.rol|lower == 'administrador' else 'user' }}">{{ current_user.rol }}</p>
                 </div>
                 <div class="w-10 h-10 rounded-xl bg-[#b4f4c7] text-[#00210e] flex items-center justify-center font-bold text-sm shadow-sm shrink-0 notranslate" translate="no">
                     {{ current_user.nombre[:1] | upper }}&#8203;{{ current_user.nombre[1:2] | upper }}
@@ -285,35 +290,35 @@
                         </div>
                         <span class="font-headline font-black text-2xl tracking-tighter text-on-surface dark:text-white uppercase">Agro Visor</span>
                     </div>
-                    <p class="text-sm font-body text-secondary dark:text-secondary/70 leading-relaxed max-w-sm">
+                    <p class="text-sm font-body text-secondary dark:text-secondary/70 leading-relaxed max-w-sm" data-i18n="footer_desc">
                         Sistema Inteligente Geoespacial y Climático. Centralizando la gestión de suelos, rendimiento hídrico e índices de resiliencia en un solo ecosistema analítico para la agricultura Ecuatoriana.
                     </p>
                 </div>
                 
                 <div class="space-y-5">
-                    <h4 class="font-black text-xs uppercase tracking-[0.2em] text-on-surface dark:text-white">Soluciones</h4>
+                    <h4 class="font-black text-xs uppercase tracking-[0.2em] text-on-surface dark:text-white" data-i18n="footer_solutions">Soluciones</h4>
                     <ul class="space-y-4">
-                        <li><a href="#" class="text-sm font-medium text-secondary dark:text-secondary/70 hover:text-primary dark:hover:text-primary-fixed transition-colors">Visor de Mapas Geográficos</a></li>
-                        <li><a href="#" class="text-sm font-medium text-secondary dark:text-secondary/70 hover:text-primary dark:hover:text-primary-fixed transition-colors">Historial de Tendencias</a></li>
-                        <li><a href="#" class="text-sm font-medium text-secondary dark:text-secondary/70 hover:text-primary dark:hover:text-primary-fixed transition-colors">Motor de Subida de Capas</a></li>
-                        <li><a href="#" class="text-sm font-medium text-secondary dark:text-secondary/70 hover:text-primary dark:hover:text-primary-fixed transition-colors">API de Referenciación</a></li>
+                        <li><a href="#" class="text-sm font-medium text-secondary dark:text-secondary/70 hover:text-primary dark:hover:text-primary-fixed transition-colors" data-i18n="footer_map_viewer">Visor de Mapas Geográficos</a></li>
+                        <li><a href="#" class="text-sm font-medium text-secondary dark:text-secondary/70 hover:text-primary dark:hover:text-primary-fixed transition-colors" data-i18n="footer_trends_history">Historial de Tendencias</a></li>
+                        <li><a href="#" class="text-sm font-medium text-secondary dark:text-secondary/70 hover:text-primary dark:hover:text-primary-fixed transition-colors" data-i18n="footer_upload_engine">Motor de Subida de Capas</a></li>
+                        <li><a href="#" class="text-sm font-medium text-secondary dark:text-secondary/70 hover:text-primary dark:hover:text-primary-fixed transition-colors" data-i18n="footer_api">API de Referenciación</a></li>
                     </ul>
                 </div>
                 
                 <div class="space-y-5">
-                    <h4 class="font-black text-xs uppercase tracking-[0.2em] text-on-surface dark:text-white">Institucional</h4>
+                    <h4 class="font-black text-xs uppercase tracking-[0.2em] text-on-surface dark:text-white" data-i18n="footer_institutional">Institucional</h4>
                     <ul class="space-y-4">
-                        <li><a href="#" class="text-sm font-medium text-secondary dark:text-secondary/70 hover:text-primary dark:hover:text-primary-fixed transition-colors">Términos del Servicio</a></li>
-                        <li><a href="#" class="text-sm font-medium text-secondary dark:text-secondary/70 hover:text-primary dark:hover:text-primary-fixed transition-colors">Tratamiento de Datos Personales</a></li>
-                        <li><a href="#" class="text-sm font-medium text-secondary dark:text-secondary/70 hover:text-primary dark:hover:text-primary-fixed transition-colors">Soporte y Contacto Web</a></li>
-                        <li><a href="#" class="text-sm font-medium text-secondary dark:text-secondary/70 hover:text-primary dark:hover:text-primary-fixed transition-colors">Manual de Usuario</a></li>
+                        <li><a href="#" class="text-sm font-medium text-secondary dark:text-secondary/70 hover:text-primary dark:hover:text-primary-fixed transition-colors" data-i18n="footer_terms">Términos del Servicio</a></li>
+                        <li><a href="#" class="text-sm font-medium text-secondary dark:text-secondary/70 hover:text-primary dark:hover:text-primary-fixed transition-colors" data-i18n="footer_privacy">Tratamiento de Datos Personales</a></li>
+                        <li><a href="#" class="text-sm font-medium text-secondary dark:text-secondary/70 hover:text-primary dark:hover:text-primary-fixed transition-colors" data-i18n="footer_support">Soporte y Contacto Web</a></li>
+                        <li><a href="#" class="text-sm font-medium text-secondary dark:text-secondary/70 hover:text-primary dark:hover:text-primary-fixed transition-colors" data-i18n="footer_manual">Manual de Usuario</a></li>
                     </ul>
                 </div>
             </div>
             
             <div class="pt-8 border-t border-outline-variant/20 dark:border-white/5 flex flex-col md:flex-row justify-between items-center gap-4">
-                <p class="text-[10px] font-black uppercase tracking-[0.2em] text-secondary/60 dark:text-secondary/40">
-                    © 2025 PROYECTO AGRO VISOR. Todos los derechos reservados.
+                <p class="text-[10px] font-black uppercase tracking-[0.2em] text-secondary/60 dark:text-secondary/40" data-i18n="footer_copyright">
+                    © 2026 PROYECTO AGRO VISOR. Todos los derechos reservados.
                 </p>
                 <div class="flex gap-4">
                     <button class="w-10 h-10 rounded-full bg-surface-container hover:bg-surface-container-high dark:bg-white/5 dark:hover:bg-white/10 flex items-center justify-center transition-all hover:-translate-y-1">
@@ -329,6 +334,9 @@
             </div>
         </div>
     </footer>
+    {% endif %}
+    {% if current_user.is_authenticated %}
+    <script src="{{ url_for('static', filename='js/search.js') }}"></script>
     {% endif %}
 </body>
 

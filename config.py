@@ -8,10 +8,13 @@ class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
     # Database Config
-    db_url = os.getenv('DATABASE_URL')
-    if db_url and db_url.startswith("postgres://"):
-        db_url = db_url.replace("postgres://", "postgresql://", 1)
-    SQLALCHEMY_DATABASE_URI = db_url or 'sqlite:///agro_visor_local.db'
+    # db_url = os.getenv('DATABASE_URL')
+    # if db_url and db_url.startswith("postgres://"):
+    #     db_url = db_url.replace("postgres://", "postgresql://", 1)
+    # SQLALCHEMY_DATABASE_URI = db_url or 'sqlite:///agro_visor_local.db'
+    
+    # Forced local database for testing
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///agro_visor_local.db'
     
     # Uploads
     UPLOAD_FOLDER = os.getenv('UPLOAD_FOLDER', 'static/uploads')
