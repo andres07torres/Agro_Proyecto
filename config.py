@@ -1,4 +1,5 @@
 import os
+import dj_database_url
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -8,13 +9,15 @@ class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
     # Database Config
-    # db_url = os.getenv('DATABASE_URL')
-    # if db_url and db_url.startswith("postgres://"):
-    #     db_url = db_url.replace("postgres://", "postgresql://", 1)
-    # SQLALCHEMY_DATABASE_URI = db_url or 'sqlite:///agro_visor_local.db'
-    
-    # Forced local database for testing
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///agro_visor_local.db'
+    db_url = os.getenv('DATABASE_URL')
+    if db_url:
+        # dj-database-url ensures compatibility with various connection strings
+        # For Flask-SQLAlchemy, we ensure the protocol is 'postgresql://'
+        if db_url.startswith("postgres://"):
+            db_url = db_url.replace("postgres://", "postgresql://", 1)
+        SQLALCHEMY_DATABASE_URI = db_url
+    else:
+        SQLALCHEMY_DATABASE_URI = 'sqlite:///agro_visor_local.db'
     
     # Uploads
     UPLOAD_FOLDER = os.getenv('UPLOAD_FOLDER', 'static/uploads')
