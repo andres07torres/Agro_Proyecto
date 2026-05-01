@@ -16,3 +16,6 @@ __pycache__/
 # --- Otros ---
 # Si todavía tienes la carpeta node_modules, es mejor ignorarla también
 node_modules/
+
+# --- Seguridad ---
+.env
